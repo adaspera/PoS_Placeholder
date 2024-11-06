@@ -1,7 +1,15 @@
-﻿
+﻿import {Col, Row} from "reactstrap";
+
 const Home = () => {
     return (
-        <h1>miau</h1>
+        <Row>
+            <Col className="border rounded">
+                miau
+            </Col>
+            <Col className="border rounded">
+                miau
+            </Col>
+        </Row>
     );
 };
 export default Home;
