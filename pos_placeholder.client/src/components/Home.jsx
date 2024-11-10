@@ -1,5 +1,7 @@
 ﻿import {Button, Col, Modal, ModalBody, ModalFooter, Row} from "reactstrap";
 import { useEffect, useState } from "react";
+import {getProducts, getProductVariations} from "@/api/productApi.jsx";
+import {createOrder} from "@/api/orderApi.jsx";
 
 const Home = () => {
     const [totalPrice, setTotalPrice] = useState("0");
@@ -11,68 +13,6 @@ const Home = () => {
     const [variations, setVariations] = useState([]);
 
 
-    const getProductVariations = (productId) => {
-        const variationsDTO = [
-            {
-                id: 0,
-                name: "Variation A",
-                price: 10,
-                inventoryQuantity: 20,
-                productId: productId,
-                picture: "imageA.png",
-                discountId: null
-            },
-            {
-                id: 1,
-                name: "Variation B",
-                price: 12,
-                inventoryQuantity: 15,
-                productId: productId,
-                picture: "imageB.png",
-                discountId: 1
-            }
-        ];
-
-        setVariations(variationsDTO);
-    };
-
-    const getOrder = (id) => {
-        //const OrderDTO = fetch("https://",{method: "GET"})
-        //    .then((response) => response.json())
-        const OrderDTO = order;
-
-        return OrderDTO;
-    }
-
-    const createOrder = () => {
-        //const OrderDTO = fetch("https://",{method: "GET"})
-        //    .then((response) => response.json())
-        const OrderDTO = {
-            products: [
-                { id: 1, fullName: "Item 1", price: 10.99, quantity: 2 },
-                { id: 2, fullName: "Item 2", price: 15.49, quantity: 1 },
-                { id: 3, fullName: "Item 3", price: 7.99, quantity: 3 },
-                { id: 4, fullName: "Item 4", price: 12.99, quantity: 1 },
-                { id: 5, fullName: "Item 5", price: 4.99, quantity: 5 }
-            ]
-        };
-        return OrderDTO;
-    }
-
-    const getProducts = () => {
-        // const ProductsDTO = fetch();
-        const productsDTO = [
-            { id: 1, name: "Item 1", itemGroup: "Group1" },
-            { id: 2, name: "Item 2", itemGroup: "Group1" },
-            { id: 3, name: "Item 3", itemGroup: "Group2" },
-            { id: 4, name: "Item 4", itemGroup: "Group2" },
-            { id: 5, name: "Item 5", itemGroup: "Group2" }
-        ];
-
-        return productsDTO;
-    }
-
-
     const removeItemFromCart = (id) => {
         const updatedProductsInCart = order.products.filter((item) => item.id !== id);
 
@@ -81,7 +21,7 @@ const Home = () => {
 
     const handleProductClick = (product) => {
         setSelectedProduct(product);
-        getProductVariations(product.id);
+        setVariations(getProductVariations(product.id));
     };
 
     useEffect( () => {
