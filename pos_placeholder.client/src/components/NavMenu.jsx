@@ -17,19 +17,19 @@ const NavMenu = () => {
             <NavbarToggler onClick={() => setCollapsed(!isCollapsed)} className="mr-2" />
             <Collapse isOpen={!isCollapsed} navbar>
                 <Nav className="me-auto" navbar>
-                    <NavLink tag={Link} to="/business" className="text-dark d-flex flex-column align-items-center">
+                    <NavLink tag={Link} to="/business" className="text-dark d-flex flex-column align-items-center" style={{width: "80px"}}>
                         <i className="bi-briefcase" style={{fontSize: '20px'}}/>
                         <div>Business</div>
                     </NavLink>
-                    <NavLink tag={Link} to="/tax" className="text-dark d-flex flex-column align-items-center">
+                    <NavLink tag={Link} to="/tax" className="text-dark d-flex flex-column align-items-center" style={{width: "80px"}}>
                         <i className="bi-bank" style={{fontSize: '20px'}}/>
                         <div>Tax</div>
                     </NavLink>
-                    <NavLink tag={Link} to="/products" className="text-dark d-flex flex-column align-items-center">
+                    <NavLink tag={Link} to="/products" className="text-dark d-flex flex-column align-items-center" style={{width: "80px"}}>
                         <i className="bi-box-seam" style={{fontSize: '20px'}}/>
                         <div>Products</div>
                     </NavLink>
-                    <NavLink tag={Link} to="/orders" className="text-dark d-flex flex-column align-items-center">
+                    <NavLink tag={Link} to="/orders" className="text-dark d-flex flex-column align-items-center" style={{width: "80px"}}>
                         <i className="bi-receipt" style={{fontSize: '20px'}}/>
                         <div>Orders</div>
                     </NavLink>
