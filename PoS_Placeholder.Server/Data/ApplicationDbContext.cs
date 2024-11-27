@@ -12,7 +12,8 @@ public class ApplicationDbContext : IdentityDbContext<User>
     }
 
     // Add all models
-    public DbSet<User> User { get; set; }
+    public DbSet<User> Users { get; set; }
+    public DbSet<Business> Businesses { get; set; }
     public DbSet<Product> Products { get; set; }
 }
 
