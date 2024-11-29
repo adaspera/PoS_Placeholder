@@ -1,7 +1,11 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Net;
+using System.Security.Claims;
+using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using PoS_Placeholder.Server.Data;
 using PoS_Placeholder.Server.Models;
 using PoS_Placeholder.Server.Models.Dto;
@@ -33,6 +37,8 @@ public class AuthController : ControllerBase
     [HttpPost("register-employee")]
     public async Task<IActionResult> RegisterEmployee([FromBody] RegisterEmployeeDto registerEmployeeDto)
     {
+        _apiResponse = new ApiResponse();
+
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
@@ -170,7 +176,7 @@ public class AuthController : ControllerBase
                         await _roleManager.CreateAsync(new IdentityRole(UserRole.Owner.ToString()));
                         await _roleManager.CreateAsync(new IdentityRole(UserRole.Employee.ToString()));
                     }
-                    
+
                     // Assign the Owner role
                     await _userManager.AddToRoleAsync(newOwner, UserRole.Owner.ToString());
 
@@ -208,5 +214,60 @@ public class AuthController : ControllerBase
                 return StatusCode(StatusCodes.Status500InternalServerError, _apiResponse);
             }
         }
+    }
+
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] LoginRequestDto loginRequestDto)
+    {
+        _apiResponse = new ApiResponse();
+
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        User userFromDb = await _userManager.FindByEmailAsync(loginRequestDto.Email);
+        if (userFromDb == null || !await _userManager.CheckPasswordAsync(userFromDb, loginRequestDto.Password))
+        {
+            _apiResponse.StatusCode = HttpStatusCode.Unauthorized;
+            _apiResponse.IsSuccess = false;
+            _apiResponse.ErrorMessages.Add("Invalid email address or password");
+            return Unauthorized(_apiResponse);
+        }
+
+        var roles = await _userManager.GetRolesAsync(userFromDb);
+        var role = roles.FirstOrDefault();
+
+        var claims = new List<Claim>
+        {
+            new(JwtRegisteredClaimNames.Sub, userFromDb.Id),
+            new(JwtRegisteredClaimNames.Email, userFromDb.Email),
+            new(ClaimTypes.Role, role),
+            new("businessId", userFromDb.BusinessId.ToString())
+        };
+
+        SecurityTokenDescriptor securityTokenDescriptor = new()
+        {
+            Subject = new ClaimsIdentity(claims),
+            Expires = DateTime.UtcNow.AddDays(7),
+            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey)),
+                SecurityAlgorithms.HmacSha256Signature)
+        };
+        
+        JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
+        SecurityToken securityToken = tokenHandler.CreateToken(securityTokenDescriptor);
+        string token = tokenHandler.WriteToken(securityToken);
+
+        LoginResponseDto loginResponse = new()
+        {
+            Email = userFromDb.Email,
+            AuthToken = token,
+            Role = role,
+            BusinessId = userFromDb.BusinessId,
+        };
+        
+        _apiResponse.StatusCode = HttpStatusCode.OK;
+        _apiResponse.Data = loginResponse;
+        return Ok(_apiResponse);
     }
 }
