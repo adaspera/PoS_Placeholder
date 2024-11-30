@@ -37,6 +37,7 @@ public class Business
     [MaxLength(255)]
     public string Country { get; set; }
     
-    // Navigation property
+    // Navigation properties
     public ICollection<User> Users { get; set; }
+    public ICollection<Product> Products { get; set; }
 }

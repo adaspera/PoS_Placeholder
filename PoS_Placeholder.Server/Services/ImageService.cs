@@ -1,3 +1,5 @@
+using Azure.Storage.Blobs.Models;
+
 namespace PoS_Placeholder.Server.Services;
 
 using Azure.Storage.Blobs;
@@ -5,45 +7,43 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 
-public class ImageService
+public class ImageService : IImageService
 {
-    private readonly string _connectionString;
-    private readonly string _containerName;
+    private readonly BlobServiceClient _blobServiceClient;
 
-    public ImageService(string connectionString, string containerName)
+    public ImageService(BlobServiceClient blobServiceClient)
     {
-        _connectionString = connectionString;
-        _containerName = containerName;
+        _blobServiceClient = blobServiceClient;
     }
 
-    public async Task UploadImageAsync(string filePath)
+    public async Task<string> UploadFileBlobAsync(string blobName, string containerName, IFormFile file)
     {
-        BlobContainerClient containerClient = new BlobContainerClient(_connectionString, _containerName);
-
+        BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
         await containerClient.CreateIfNotExistsAsync();
-
-        string fileName = Path.GetFileName(filePath);
-        BlobClient blobClient = containerClient.GetBlobClient(fileName);
-
-        using FileStream uploadFileStream = File.OpenRead(filePath);
-        await blobClient.UploadAsync(uploadFileStream, overwrite: true);
-    }
-
-    //For testing
-    public async Task ListImagesAsync()
-    {
-        BlobContainerClient containerClient = new BlobContainerClient(_connectionString, _containerName);
-        await foreach (var blobItem in containerClient.GetBlobsAsync())
-        {
-            Console.WriteLine($"Blob found: {blobItem.Name}");
-        }
-    }
-
-    public async Task DownloadImageAsync(string blobName, string downloadFilePath)
-    {
-        BlobContainerClient containerClient = new BlobContainerClient(_connectionString, _containerName);
+        
         BlobClient blobClient = containerClient.GetBlobClient(blobName);
 
-        await blobClient.DownloadToAsync(downloadFilePath);
+        var httpHeaders = new BlobHttpHeaders
+        {
+            ContentType = file.ContentType,
+        };
+        
+        await blobClient.UploadAsync(file.OpenReadStream(), httpHeaders);
+        
+        return blobClient.Uri.AbsoluteUri;
+    }
+
+    public async Task<bool> DeleteFileBlobAsync(string blobName, string containerName)
+    {
+        BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
+        BlobClient blobClient = containerClient.GetBlobClient(blobName);
+        return await blobClient.DeleteIfExistsAsync();
+    }
+
+    public async Task<string> GetFileBlobUrlAsync(string blobName, string containerName)
+    {
+        BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
+        BlobClient blobClient = containerClient.GetBlobClient(blobName);
+        return blobClient.Uri.AbsoluteUri;
     }
 }

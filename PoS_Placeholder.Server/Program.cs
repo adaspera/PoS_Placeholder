@@ -1,4 +1,5 @@
 using System.Text;
+using Azure.Storage.Blobs;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -19,13 +20,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("AZURE_SQL_CONNECTIONSTRING"));
 });
 
-builder.Services.AddTransient<ImageService>(provider =>
-{
-    var configuration = provider.GetRequiredService<IConfiguration>();
-    string connectionString = configuration["ConnectionStrings:IMG_STORAGE_CONTAINER:ConnectionString"];
-    string containerName = configuration["ConnectionStrings:IMG_STORAGE_CONTAINER:ContainerName"];
-    return new ImageService(connectionString, containerName);
-});
+builder.Services.AddSingleton(u =>
+    new BlobServiceClient(builder.Configuration.GetConnectionString("IMG_STORAGE_CONTAINER_CONNECTIONSTRING")));
+builder.Services.AddSingleton<IImageService, ImageService>();
 
 builder.Services.AddIdentity<User, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
 
