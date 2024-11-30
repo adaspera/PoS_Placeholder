@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using PoS_Placeholder.Server.Data;
 using PoS_Placeholder.Server.Models;
+using PoS_Placeholder.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +17,14 @@ builder.Services.AddAuthorization();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("AZURE_SQL_CONNECTIONSTRING"));
+});
+
+builder.Services.AddTransient<ImageService>(provider =>
+{
+    var configuration = provider.GetRequiredService<IConfiguration>();
+    string connectionString = configuration["ConnectionStrings:IMG_STORAGE_CONTAINER:ConnectionString"];
+    string containerName = configuration["ConnectionStrings:IMG_STORAGE_CONTAINER:ContainerName"];
+    return new ImageService(connectionString, containerName);
 });
 
 builder.Services.AddIdentity<User, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
