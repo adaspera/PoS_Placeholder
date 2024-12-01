@@ -36,14 +36,14 @@ public class ProductsController : ControllerBase
     [Authorize]
     public async Task<IActionResult> GetAllProducts()
     {
-        _apiResponse = new ApiResponse();
+        // _apiResponse = new ApiResponse();
 
         var user = await _userManager.GetUserAsync(User);
         if (user == null)
         {
-            _apiResponse.StatusCode = HttpStatusCode.Unauthorized;
-            _apiResponse.IsSuccess = false;
-            _apiResponse.ErrorMessages.Add("User not found.");
+            // _apiResponse.StatusCode = HttpStatusCode.Unauthorized;
+            // _apiResponse.IsSuccess = false;
+            // _apiResponse.ErrorMessages.Add("User not found.");
             return Unauthorized(_apiResponse);
         }
 
@@ -51,9 +51,9 @@ public class ProductsController : ControllerBase
         var businessProducts = await _db.Products.Where(product => product.BusinessId == userBusinessId).ToListAsync();
 
 
-        _apiResponse.StatusCode = HttpStatusCode.OK;
-        _apiResponse.Data = businessProducts;
-        return Ok(_apiResponse);
+        // _apiResponse.StatusCode = HttpStatusCode.OK;
+        // _apiResponse.Data = businessProducts;
+        return Ok(businessProducts);
     }
 
     [HttpGet("{id:int}", Name = "GetProductById")]

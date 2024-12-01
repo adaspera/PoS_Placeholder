@@ -1,3 +1,13 @@
+import { apiService } from "./ApiService";
+
+export const getProducts = async () => {
+    //console.log(await apiService.get("/api/products"));
+    return await apiService.get("/api/products");
+};
+
+// export const getProductVariations = async (productId) => {
+//     return await apiService.get(`/api/products/${productId}/variations`);
+// };
 
 
 export const getProductVariations = (productId) => {
@@ -25,15 +35,16 @@ export const getProductVariations = (productId) => {
     return variationsDTO;
 };
 
-export const getProducts = () => {
-    // const ProductsDTO = fetch();
-    const productsDTO = [
-        { id: 1, name: "Item 1", itemGroup: "Group1" },
-        { id: 2, name: "Item 2", itemGroup: "Group1" },
-        { id: 3, name: "Item 3", itemGroup: "Group2" },
-        { id: 4, name: "Item 4", itemGroup: "Group2" },
-        { id: 5, name: "Item 5", itemGroup: "Group2" }
-    ];
+// export const getProducts = () => {
+//     // const ProductsDTO = fetch();
+//     const productsDTO = [
+//         { id: 1, name: "Item 1", itemGroup: "Group1" },
+//         { id: 2, name: "Item 2", itemGroup: "Group1" },
+//         { id: 3, name: "Item 3", itemGroup: "Group2" },
+//         { id: 4, name: "Item 4", itemGroup: "Group2" },
+//         { id: 5, name: "Item 5", itemGroup: "Group2" }
+//     ];
+//
+//     return productsDTO;
+// }
 
-    return productsDTO;
-}

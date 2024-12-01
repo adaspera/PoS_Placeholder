@@ -4,8 +4,11 @@ import {getProducts, getProductVariations} from "@/api/productApi.jsx";
 import {createOrder} from "@/api/orderApi.jsx";
 
 const Home = () => {
+    const [isLoading, setIsLoading] = useState(true);
+
     const [totalPrice, setTotalPrice] = useState("0");
     const [order, setOrder] = useState(null);
+    const [products, setProducts] = useState(getProducts());
     const [productsInCart, setProductsInCart] = useState(null);
     const [productsInCatalogue, setProductsInCatalogue] = useState(null);
 
@@ -29,13 +32,25 @@ const Home = () => {
         setProductsInCart((prevProducts) => ({ ...prevProducts}));
     };
 
-    useEffect( () => {
-        if (!order) {
-            setOrder(createOrder());
-        }
 
-        formatProductsInCatalogue(getProducts());
-    }, [])
+    const fetchProducts = async () => {
+        try {
+            const fetchedProducts = await getProducts();
+            setProducts(fetchedProducts);
+        } catch (error) {
+            console.error("Error fetching products:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        setOrder(createOrder());
+    }, []);
+
+    useEffect(() => {
+        fetchProducts();
+    }, []);
 
     useEffect(() => {
         if (order && order.products) {
@@ -45,6 +60,12 @@ const Home = () => {
             setTotalPrice(total.toFixed(2));
         }
     }, [order]);
+
+    useEffect(() => {
+        if (products && products.length > 0) {
+            formatProductsInCatalogue(products);
+        }
+    }, [products]);
 
     const formatProductsInCart = () => {
         const formatedProductsInCart = order.products.map((item, index) => (
@@ -116,6 +137,11 @@ const Home = () => {
                 </Button>
             </ModalFooter>
         </Modal>
+
+    if (isLoading) {
+        return <div>Loading...</div>;
+    }
+    console.log(products);
 
     return (
         <Row style={{ height: "85vh" }}>
