@@ -24,6 +24,11 @@ const Home = () => {
         setVariations(getProductVariations(product.id));
     };
 
+    const handleAddToCart = (variation) => {
+        // does nothing for now
+        setProductsInCart((prevProducts) => ({ ...prevProducts}));
+    };
+
     useEffect( () => {
         if (!order) {
             setOrder(createOrder());
@@ -97,7 +102,7 @@ const Home = () => {
             <ModalBody>
                 <h5>{selectedProduct?.name}</h5>
                 {variations.map((variation) => (
-                    <div key={variation.id} className="p-2 border rounded mb-2">
+                    <div key={variation.id} className="p-2 border rounded mb-2" onClick={() => handleAddToCart(variation)}>
                         <h6>{variation.name}</h6>
                         <p>Price: {variation.price} €</p>
                         <p>In Stock: {variation.inventoryQuantity}</p>
@@ -127,7 +132,9 @@ const Home = () => {
                     <Button color="success" className="m-1">Pay now</Button>
                 </div>
             </Col>
-            <Col className="border rounded shadow-sm m-2 p-2">{productsInCatalogue}</Col>
+            <Col className="border rounded shadow-sm m-2 p-2">
+                {productsInCatalogue}
+            </Col>
 
             {modal}
         </Row>
