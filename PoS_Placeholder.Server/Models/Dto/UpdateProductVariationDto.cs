@@ -2,17 +2,19 @@
 
 namespace PoS_Placeholder.Server.Models.Dto;
 
-public class UpdateProductDto
+public class UpdateProductVariationDto
 {
     [Required]
     [Key]
     public int Id { get; set; }
-
+    
     [Required]
     [MaxLength(255)]
     public string Name { get; set; }
 
     [Required]
-    [MaxLength(255)]
-    public string ItemGroup { get; set; }
+    [Range(0.01, double.MaxValue, ErrorMessage = "Price must be greater than zero.")]
+    public decimal Price { get; set; }
+
+    public IFormFile PictureFile { get; set; }
 }

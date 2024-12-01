@@ -41,7 +41,12 @@ builder.Logging.AddLogger(configuration =>
 
 builder.Services.AddSingleton(u =>
     new BlobServiceClient(builder.Configuration.GetConnectionString("IMG_STORAGE_CONTAINER_CONNECTIONSTRING")));
-builder.Services.AddSingleton<IImageService, ImageService>();
+
+builder.Services.AddSingleton<IImageService>(provider =>
+{
+    var blobServiceClient = provider.GetRequiredService<BlobServiceClient>();
+    return new ImageService(builder.Configuration.GetConnectionString("IMG_STORAGE_CONTAINER:ContainerName"), blobServiceClient);
+});
 
 builder.Services.AddIdentity<User, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
 

@@ -10,15 +10,17 @@ using System.Threading.Tasks;
 public class ImageService : IImageService
 {
     private readonly BlobServiceClient _blobServiceClient;
+    private string _containerName;
 
-    public ImageService(BlobServiceClient blobServiceClient)
+    public ImageService(string containerName,BlobServiceClient blobServiceClient)
     {
+        _containerName = containerName;
         _blobServiceClient = blobServiceClient;
     }
 
-    public async Task<string> UploadFileBlobAsync(string blobName, string containerName, IFormFile file)
+    public async Task<string> UploadFileBlobAsync(string blobName, IFormFile file)
     {
-        BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
+        BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
         await containerClient.CreateIfNotExistsAsync();
         
         BlobClient blobClient = containerClient.GetBlobClient(blobName);
@@ -33,16 +35,16 @@ public class ImageService : IImageService
         return blobClient.Uri.AbsoluteUri;
     }
 
-    public async Task<bool> DeleteFileBlobAsync(string blobName, string containerName)
+    public async Task<bool> DeleteFileBlobAsync(string blobName)
     {
-        BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
+        BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
         BlobClient blobClient = containerClient.GetBlobClient(blobName);
         return await blobClient.DeleteIfExistsAsync();
     }
 
-    public async Task<string> GetFileBlobUrlAsync(string blobName, string containerName)
+    public async Task<string> GetFileBlobUrlAsync(string blobName)
     {
-        BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
+        BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
         BlobClient blobClient = containerClient.GetBlobClient(blobName);
         return blobClient.Uri.AbsoluteUri;
     }

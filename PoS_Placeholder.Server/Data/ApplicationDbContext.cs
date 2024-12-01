@@ -15,6 +15,7 @@ public class ApplicationDbContext : IdentityDbContext<User>
     public DbSet<User> Users { get; set; }
     public DbSet<Business> Businesses { get; set; }
     public DbSet<Product> Products { get; set; }
+    public DbSet<ProductVariation> ProductVariations { get; set; }
 }
 
 // dotnet ef migrations add "migrationName"

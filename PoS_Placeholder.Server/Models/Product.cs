@@ -10,24 +10,11 @@ public class Product
     
     [Required]
     [MaxLength(255)]
-    public string ProductName { get; set; }
-    
-    [Required]
-    [MaxLength(255)]
-    public string VariationName { get; set; }
+    public string Name { get; set; }
     
     [Required]
     [MaxLength(255)]
     public string ItemGroup { get; set; }
-    
-    [Required]
-    [Column(TypeName = "decimal(18,2)")]
-    [Range(0.01, double.MaxValue, ErrorMessage = "Price must be greater than zero.")]
-    public decimal Price { get; set; }
-    
-    [Required]
-    [Url]
-    public string PictureUrl { get; set; }
     
     [Required]
     public int BusinessId { get; set; }
