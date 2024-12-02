@@ -141,7 +141,6 @@ const Home = () => {
     if (isLoading) {
         return <div>Loading...</div>;
     }
-    console.log(products);
 
     return (
         <Row style={{ height: "85vh" }}>

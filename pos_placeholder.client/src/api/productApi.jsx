@@ -1,8 +1,27 @@
 import { apiService } from "./ApiService";
 
 export const getProducts = async () => {
-    //console.log(await apiService.get("/api/products"));
-    return await apiService.get("/api/products");
+    try {
+        return await apiService.get("/api/products");
+    } catch (e) {
+        console.error("Error fetching products:", e);
+    }
+};
+
+export const addProduct = async (product) => {
+    try {
+        return await apiService.post("/api/products", product);
+    }  catch (e) {
+        console.log("Error creating product:", e);
+    }
+};
+
+export const deleteProduct = async (id) => {
+    try {
+        await apiService.delete(`/api/products/${id}`);
+    } catch (e) {
+        console.error("Error deleting product:", e);
+    }
 };
 
 // export const getProductVariations = async (productId) => {

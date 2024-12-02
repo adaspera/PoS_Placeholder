@@ -11,14 +11,16 @@ import {
     Label,
     Row
 } from "reactstrap";
+import * as ProductApi from "@/api/productApi.jsx";
 
 const Products = () => {
+    const [isLoading, setIsLoading] = useState(true);
 
     const [products, setProducts] = useState([]);
     const [variations, setVariations] = useState([]);
 
     const [itemName, setItemName] = useState('');
-    const [itemGoup, setItemGroup] = useState('');
+    const [itemGroup, setItemGroup] = useState('');
 
     const [variationName, setVariationName] = useState('');
     const [variationPrice, setVariationPrice] = useState('');
@@ -26,8 +28,15 @@ const Products = () => {
 
     const [isVariationFormOpen, setIsVariationFormOpen] = useState(false);
 
+    const fetchProducts = async () => {
+        const fetchedProducts = await getProducts();
+        setProducts(fetchedProducts);
+        setIsLoading(false);
+    };
+
+
     useEffect( () => {
-        setProducts(getProducts());
+        fetchProducts()
     },[]);
 
 
@@ -45,7 +54,8 @@ const Products = () => {
         }
     };
 
-    const removeProduct = (id) => {
+    const removeProduct = async (id) => {
+        await ProductApi.deleteProduct(id);
         setProducts(products.filter(product => product.id !== id));
     }
 
@@ -53,10 +63,13 @@ const Products = () => {
         setVariations(variations.filter(variation => variation.id !== id));
     }
 
-    const addProduct = () => {
-        const changedProducts = [...products, { id: products.length + 1, name: itemName, itemGroup: "Group1" }];
-        setProducts(changedProducts);
-    }
+    const addProduct = async () => {
+        const newProduct = new FormData();
+        newProduct.append("name", itemName);
+        newProduct.append("itemGroup", itemGroup);
+        const createdProduct = await ProductApi.addProduct(newProduct);
+        setProducts([...products, createdProduct]);
+    };
 
     const addVariation = () => {
         const changedVariations = [...variations, {}]
@@ -110,6 +123,11 @@ const Products = () => {
                 Add variation
             </Button>
         </Row>
+
+    if (isLoading) {
+        return <div>Loading...</div>;
+    }
+    console.log(products);
 
     return (
         <Row style={{ height: "85vh" }}>
@@ -168,7 +186,7 @@ const Products = () => {
                 <div className="d-flex justify-content-center mb-1">
                     <Label className="w-25 d-flex flex-column justify-content-center p-0 m-0">Item group</Label>
                     <Input placeholder="Enter item group"
-                           value={itemGoup}
+                           value={itemGroup}
                            onChange={(e) => setItemGroup(e.target.value)}>
                     </Input>
                 </div>

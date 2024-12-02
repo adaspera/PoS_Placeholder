@@ -11,12 +11,15 @@ class ApiService {
         const token = localStorage.getItem("authToken");
 
         const headers = {
-            "Content-Type": "application/json",
             ...options.headers,
         };
 
         if (token) {
             headers["Authorization"] = `Bearer ${token}`;
+        }
+
+        if (!(options.body instanceof FormData)) {
+            headers["Content-Type"] = "application/json";
         }
 
         try {
@@ -30,7 +33,12 @@ class ApiService {
                 throw new Error(error.message || "An error occurred");
             }
 
-            return await response.json();
+            const contentType = response.headers.get("Content-Type");
+            if (contentType && contentType.includes("application/json")) {
+                return await response.json();
+            }
+
+            return response;
         } catch (error) {
             console.error("API Error:", error);
             throw error;
@@ -45,14 +53,14 @@ class ApiService {
     post(endpoint, body) {
         return this.request(endpoint, {
             method: "POST",
-            body: JSON.stringify(body),
+            body: body instanceof FormData ? body : JSON.stringify(body),
         });
     }
 
     put(endpoint, body) {
         return this.request(endpoint, {
             method: "PUT",
-            body: JSON.stringify(body),
+            body: body instanceof FormData ? body : JSON.stringify(body),
         });
     }
 

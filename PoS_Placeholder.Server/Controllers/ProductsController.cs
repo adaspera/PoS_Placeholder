@@ -109,20 +109,15 @@ public class ProductsController : ControllerBase
         }
     }
 
-    [HttpPut("{id:int}")]
+    [HttpPut]
     [Authorize(Roles = nameof(UserRole.Owner))]
-    public async Task<IActionResult> UpdateProduct(int id, [FromForm] UpdateProductDto updateProductDto)
+    public async Task<IActionResult> UpdateProduct([FromForm] UpdateProductDto updateProductDto)
     {
         try
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
-            }
-            
-            if (updateProductDto.Id != id)
-            {
-                return BadRequest("Product ID mismatch.");
             }
 
             var user = await _userManager.GetUserAsync(User);
@@ -133,7 +128,7 @@ public class ProductsController : ControllerBase
 
             var userBusinessId = user.BusinessId;
 
-            var product = await _db.Products.FindAsync(id);
+            var product = await _db.Products.FindAsync(updateProductDto);
             if (product == null)
             {
                 return NotFound("Product not found.");
@@ -152,7 +147,7 @@ public class ProductsController : ControllerBase
             _db.Products.Update(product);
             await _db.SaveChangesAsync();
 
-            return Ok();
+            return Ok(product);
         }
         catch (Exception ex)
         {

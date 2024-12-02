@@ -13,4 +13,7 @@ public class CreateProductVariationDto
     public decimal Price { get; set; }
 
     public IFormFile PictureFile { get; set; }
+    
+    [Required]
+    public int ProductId { get; set; }
 }
