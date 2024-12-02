@@ -1,14 +1,14 @@
 ﻿import {Button, Col, Modal, ModalBody, ModalFooter, Row} from "reactstrap";
 import { useEffect, useState } from "react";
-import {getProducts, getProductVariations} from "@/api/productApi.jsx";
 import {createOrder} from "@/api/orderApi.jsx";
+import * as productApi from "@/api/productApi.jsx";
 
 const Home = () => {
     const [isLoading, setIsLoading] = useState(true);
 
     const [totalPrice, setTotalPrice] = useState("0");
     const [order, setOrder] = useState(null);
-    const [products, setProducts] = useState(getProducts());
+    const [products, setProducts] = useState(null);
     const [productsInCart, setProductsInCart] = useState(null);
     const [productsInCatalogue, setProductsInCatalogue] = useState(null);
 
@@ -22,9 +22,9 @@ const Home = () => {
         setOrder((prevOrder) => ({ ...prevOrder, products: updatedProductsInCart }));
     };
 
-    const handleProductClick = (product) => {
+    const handleProductClick = async (product) => {
         setSelectedProduct(product);
-        setVariations(getProductVariations(product.id));
+        await fetchProductVariations(product.id);
     };
 
     const handleAddToCart = (variation) => {
@@ -35,13 +35,18 @@ const Home = () => {
 
     const fetchProducts = async () => {
         try {
-            const fetchedProducts = await getProducts();
+            const fetchedProducts = await productApi.getProducts();
             setProducts(fetchedProducts);
         } catch (error) {
             console.error("Error fetching products:", error);
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const fetchProductVariations = async (id) => {
+        const fetchedProductVariations = await productApi.getProductVariations(id);
+        setVariations(fetchedProductVariations);
     };
 
     useEffect(() => {

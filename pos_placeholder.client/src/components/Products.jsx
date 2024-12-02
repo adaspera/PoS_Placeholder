@@ -1,5 +1,4 @@
 import {useEffect, useState} from "react";
-import {getProducts, getProductVariations} from "@/api/productApi.jsx";
 import {
     Accordion,
     AccordionBody,
@@ -24,14 +23,19 @@ const Products = () => {
 
     const [variationName, setVariationName] = useState('');
     const [variationPrice, setVariationPrice] = useState('');
-    const [variationImage, setVariationImage] = useState(null);
+    const [variationImage, setVariationImage] = useState({});
 
     const [isVariationFormOpen, setIsVariationFormOpen] = useState(false);
 
     const fetchProducts = async () => {
-        const fetchedProducts = await getProducts();
+        const fetchedProducts = await ProductApi.getProducts();
         setProducts(fetchedProducts);
         setIsLoading(false);
+    };
+
+    const fetchProductVariations = async (id) => {
+        const fetchedProductVariations = await ProductApi.getProductVariations(id);
+        setVariations(fetchedProductVariations);
     };
 
 
@@ -42,7 +46,7 @@ const Products = () => {
 
     const [open, setOpen] = useState(null);
 
-    const toggleAccordion = (id) => {
+    const toggleAccordion = async (id) => {
         if (open === id) {
             setOpen(null);
             setVariations([])
@@ -50,7 +54,7 @@ const Products = () => {
             setOpen(id);
             setIsVariationFormOpen(false);
             handleClearVariation();
-            setVariations(getProductVariations(id));
+            await fetchProductVariations(id);
         }
     };
 
@@ -59,7 +63,8 @@ const Products = () => {
         setProducts(products.filter(product => product.id !== id));
     }
 
-    const removeVariation = (id) => {
+    const removeVariation = async (id) => {
+        await ProductApi.deleteProductVariation(id);
         setVariations(variations.filter(variation => variation.id !== id));
     }
 
@@ -71,8 +76,15 @@ const Products = () => {
         setProducts([...products, createdProduct]);
     };
 
-    const addVariation = () => {
-        const changedVariations = [...variations, {}]
+    const addVariation = async (productId) => {
+        const newVariation = new FormData();
+        newVariation.append("name", variationName);
+        newVariation.append("price", variationPrice);
+        newVariation.append("pictureFile", variationImage);
+        newVariation.append("productId", productId);
+        const createdVariation = await ProductApi.addProductVariation(newVariation);
+
+        setVariations([...variations, createdVariation]);
     }
 
     const handleClearProduct = () => {
@@ -86,48 +98,51 @@ const Products = () => {
         setVariationImage(null);
     }
 
-    const variationForm = isVariationFormOpen ?
-        <Row className="border rounded p-3 ps-4">
-            <Form>
-                <FormGroup row>
-                    <Label sm={3}>Variation name</Label>
-                    <Col sm={9}>
-                        <Input value={variationName}
-                               onChange={(e) => setVariationName(e.target.value)}>
-                        </Input>
-                    </Col>
-                </FormGroup>
-                <FormGroup row>
-                    <Label sm={3}>Variation price</Label>
-                    <Col sm={9}>
-                        <Input value={variationPrice}
-                               onChange={(e) => setVariationPrice(e.target.value)}>
-                        </Input>
-                    </Col>
-                </FormGroup>
-                <FormGroup row>
-                    <Label sm={3}>Picture</Label>
-                    <Col sm={9}>
-                        <Input type="file"></Input>
-                    </Col>
-                </FormGroup>
-            </Form>
-            <Col>
-                <Button color="success" className="me-3" onClick={addVariation}>Create</Button>
-                <Button color="danger" onClick={handleClearVariation}>Cancel</Button>
-            </Col>
-        </Row>
-        :
-        <Row>
-            <Button color="secondary" outline onClick={() => setIsVariationFormOpen(true)}>
-                Add variation
-            </Button>
-        </Row>
+    const variationForm = (id) => {
+        return isVariationFormOpen ?
+            <Row className="border rounded p-3 ps-4">
+                <Form>
+                    <FormGroup row>
+                        <Label sm={3}>Variation name</Label>
+                        <Col sm={9}>
+                            <Input value={variationName}
+                                   onChange={(e) => setVariationName(e.target.value)}>
+                            </Input>
+                        </Col>
+                    </FormGroup>
+                    <FormGroup row>
+                        <Label sm={3}>Variation price</Label>
+                        <Col sm={9}>
+                            <Input value={variationPrice}
+                                   onChange={(e) => setVariationPrice(e.target.value)}>
+                            </Input>
+                        </Col>
+                    </FormGroup>
+                    <FormGroup row>
+                        <Label sm={3}>Picture</Label>
+                        <Col sm={9}>
+                            <Input type="file"
+                                   onChange={(e) => setVariationImage(e.target.files[0])}>
+                            </Input>
+                        </Col>
+                    </FormGroup>
+                </Form>
+                <Col>
+                    <Button color="success" className="me-3" onClick={() => addVariation(id)}>Create</Button>
+                    <Button color="danger" onClick={handleClearVariation}>Cancel</Button>
+                </Col>
+            </Row>
+            :
+            <Row>
+                <Button color="secondary" outline onClick={() => setIsVariationFormOpen(true)}>
+                    Add variation
+                </Button>
+            </Row>
+    }
 
     if (isLoading) {
         return <div>Loading...</div>;
     }
-    console.log(products);
 
     return (
         <Row style={{ height: "85vh" }}>
@@ -150,7 +165,7 @@ const Products = () => {
                                         <Row key={variation.id} className="mb-2 align-items-center">
                                             <Col xs="auto">
                                                 <img
-                                                    src={variation.picture}
+                                                    src={variation.pictureUrl}
                                                     alt={variation.name}
                                                     style={{ width: "50px" }}
                                                 />
@@ -168,7 +183,7 @@ const Products = () => {
                                 ) : (
                                     <p>Loading variations...</p>
                                 )}
-                                {variationForm}
+                                {variationForm(item.id)}
                             </AccordionBody>
                         </AccordionItem>
                     ))}

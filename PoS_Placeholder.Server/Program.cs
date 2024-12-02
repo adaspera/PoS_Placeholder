@@ -45,7 +45,12 @@ builder.Services.AddSingleton(u =>
 builder.Services.AddSingleton<IImageService>(provider =>
 {
     var blobServiceClient = provider.GetRequiredService<BlobServiceClient>();
-    return new ImageService(builder.Configuration.GetConnectionString("IMG_STORAGE_CONTAINER:ContainerName"), blobServiceClient);
+    var containerName = builder.Configuration.GetSection("IMG_STORAGE_CONTAINER")["ContainerName"];
+    if (string.IsNullOrEmpty(containerName))
+    {
+        throw new InvalidOperationException("Container name is not configured.");
+    }
+    return new ImageService(containerName, blobServiceClient);
 });
 
 builder.Services.AddIdentity<User, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();

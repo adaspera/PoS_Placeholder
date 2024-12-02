@@ -46,6 +46,12 @@ public class ImageService : IImageService
     {
         BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
         BlobClient blobClient = containerClient.GetBlobClient(blobName);
-        return blobClient.Uri.AbsoluteUri;
+    
+        if (await blobClient.ExistsAsync())
+        {
+            return blobClient.Uri.AbsoluteUri;
+        }
+
+        throw new FileNotFoundException($"Blob with name {blobName} was not found");
     }
 }

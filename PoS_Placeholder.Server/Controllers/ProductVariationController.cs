@@ -50,11 +50,11 @@ public class ProductVariationController : ControllerBase
             .Where(pv => pv.ProductId == id && pv.Product.BusinessId == userBusinessId)
             .ToListAsync();
 
-        if (productVariations == null || !productVariations.Any())
-        {
-            return NotFound("Product variations not found.");
-        }
-
+         if (productVariations == null)
+         {
+             return NotFound("Product not found.");
+         }
+         
         return Ok(productVariations);
     }
     
@@ -99,7 +99,7 @@ public class ProductVariationController : ControllerBase
         }
         catch (Exception e)
         {
-            return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+            return StatusCode(StatusCodes.Status500InternalServerError, $"Error: {e.Message}, StackTrace: {e.StackTrace}");
         }
         
     }

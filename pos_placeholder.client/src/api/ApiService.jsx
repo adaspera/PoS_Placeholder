@@ -28,13 +28,16 @@ class ApiService {
                 ...options,
             });
 
+            const contentType = response.headers.get("Content-Type");
+
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || "An error occurred");
+                const error = contentType?.includes("application/json")
+                    ? await response.json()
+                    : await response.text();
+                throw new Error(error.message || error || "An error occurred");
             }
 
-            const contentType = response.headers.get("Content-Type");
-            if (contentType && contentType.includes("application/json")) {
+            if (contentType?.includes("application/json")) {
                 return await response.json();
             }
 
