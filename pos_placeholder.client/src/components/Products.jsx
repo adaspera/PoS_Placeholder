@@ -11,6 +11,7 @@ import {
     Row
 } from "reactstrap";
 import * as ProductApi from "@/api/productApi.jsx";
+import ProductVariationForm from "@/components/shared/ProductVariationForm.jsx";
 
 const Products = () => {
     const [isLoading, setIsLoading] = useState(true);
@@ -25,7 +26,10 @@ const Products = () => {
     const [variationPrice, setVariationPrice] = useState('');
     const [variationImage, setVariationImage] = useState({});
 
-    const [isVariationFormOpen, setIsVariationFormOpen] = useState(false);
+    const [isAddVariationFormOpen, setIsAddVariationFormOpen] = useState(false);
+    const [editVariationFormOpenFor, setEditVariationFormOpenFor] = useState('');
+
+    const [open, setOpen] = useState(null);
 
     const fetchProducts = async () => {
         const fetchedProducts = await ProductApi.getProducts();
@@ -43,16 +47,13 @@ const Products = () => {
         fetchProducts()
     },[]);
 
-
-    const [open, setOpen] = useState(null);
-
     const toggleAccordion = async (id) => {
         if (open === id) {
             setOpen(null);
             setVariations([])
         } else {
             setOpen(id);
-            setIsVariationFormOpen(false);
+            setIsAddVariationFormOpen(false);
             handleClearVariation();
             await fetchProductVariations(id);
         }
@@ -76,17 +77,6 @@ const Products = () => {
         setProducts([...products, createdProduct]);
     };
 
-    const addVariation = async (productId) => {
-        const newVariation = new FormData();
-        newVariation.append("name", variationName);
-        newVariation.append("price", variationPrice);
-        newVariation.append("pictureFile", variationImage);
-        newVariation.append("productId", productId);
-        const createdVariation = await ProductApi.addProductVariation(newVariation);
-
-        setVariations([...variations, createdVariation]);
-    }
-
     const handleClearProduct = () => {
         setItemName('');
         setItemGroup('');
@@ -96,53 +86,29 @@ const Products = () => {
         setVariationName('');
         setVariationPrice('');
         setVariationImage(null);
+
+        setIsAddVariationFormOpen(false);
     }
 
-    const variationForm = (id) => {
-        return isVariationFormOpen ?
-            <Row className="border rounded p-3 ps-4">
-                <Form>
-                    <FormGroup row>
-                        <Label sm={3}>Variation name</Label>
-                        <Col sm={9}>
-                            <Input value={variationName}
-                                   onChange={(e) => setVariationName(e.target.value)}>
-                            </Input>
-                        </Col>
-                    </FormGroup>
-                    <FormGroup row>
-                        <Label sm={3}>Variation price</Label>
-                        <Col sm={9}>
-                            <Input value={variationPrice}
-                                   onChange={(e) => setVariationPrice(e.target.value)}>
-                            </Input>
-                        </Col>
-                    </FormGroup>
-                    <FormGroup row>
-                        <Label sm={3}>Picture</Label>
-                        <Col sm={9}>
-                            <Input type="file"
-                                   onChange={(e) => setVariationImage(e.target.files[0])}>
-                            </Input>
-                        </Col>
-                    </FormGroup>
-                </Form>
-                <Col>
-                    <Button color="success" className="me-3" onClick={() => addVariation(id)}>Create</Button>
-                    <Button color="danger" onClick={handleClearVariation}>Cancel</Button>
-                </Col>
-            </Row>
-            :
-            <Row>
-                <Button color="secondary" outline onClick={() => setIsVariationFormOpen(true)}>
-                    Add variation
-                </Button>
-            </Row>
-    }
+    const handleAddVariation = async (productId, formData) => {
+        const createdVariation = await ProductApi.addProductVariation(formData);
+        setVariations([...variations, createdVariation]);
+        setIsAddVariationFormOpen(false);
+    };
+
+    const handleUpdateVariation = async (formData) => {
+        const updatedVariation = await ProductApi.updateProductVariation(formData);
+        console.log(formData);
+        setVariations(
+            variations.map((v) => (v.id === updatedVariation.id ? updatedVariation : v))
+        );
+        setEditVariationFormOpenFor('');
+    };
 
     if (isLoading) {
         return <div>Loading...</div>;
     }
+
 
     return (
         <Row style={{ height: "85vh" }}>
@@ -160,9 +126,9 @@ const Products = () => {
                                 </div>
                             </AccordionHeader>
                             <AccordionBody accordionId={item.id.toString()}>
-                                {variations ? (
-                                    variations.map((variation) => (
-                                        <Row key={variation.id} className="mb-2 align-items-center">
+                                {variations.map((variation) => (
+                                    <div key={variation.id}>
+                                        <Row className="mb-2 align-items-center">
                                             <Col xs="auto">
                                                 <img
                                                     src={variation.pictureUrl}
@@ -174,16 +140,45 @@ const Products = () => {
                                                 <span>{variation.name} - ${variation.price} | Stock: {variation.inventoryQuantity}</span>
                                             </Col>
                                             <Col xs="auto">
+                                                <Button
+                                                    color="secondary"
+                                                    outline
+                                                    onClick={() => setEditVariationFormOpenFor(variation.id)}
+                                                >
+                                                    <i className="bi-pencil"></i>
+                                                </Button>
+                                            </Col>
+                                            <Col xs="auto">
                                                 <Button color="danger" onClick={() => removeVariation(variation.id)}>
                                                     <i className="bi-trash"></i>
                                                 </Button>
                                             </Col>
                                         </Row>
-                                    ))
+                                        {editVariationFormOpenFor === variation.id && (
+                                            <ProductVariationForm
+                                                variation={variation}
+                                                onSubmit={(formData) =>
+                                                    handleUpdateVariation(formData)
+                                                }
+                                                onCancel={() => setEditVariationFormOpenFor('')}
+                                            />
+                                        )}
+                                    </div>
+                                ))}
+                                {isAddVariationFormOpen ? (
+                                    <ProductVariationForm
+                                        onSubmit={(formData) =>
+                                            handleAddVariation(item.id, formData)
+                                        }
+                                        onCancel={() => setIsAddVariationFormOpen(false)}
+                                    />
                                 ) : (
-                                    <p>Loading variations...</p>
+                                    <Row>
+                                        <Button color="secondary" outline onClick={() => setIsAddVariationFormOpen(true)}>
+                                            Add variation
+                                        </Button>
+                                    </Row>
                                 )}
-                                {variationForm(item.id)}
                             </AccordionBody>
                         </AccordionItem>
                     ))}

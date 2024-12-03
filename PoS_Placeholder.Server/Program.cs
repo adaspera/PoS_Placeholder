@@ -8,6 +8,7 @@ using Microsoft.OpenApi.Models;
 using PoS_Placeholder.Server.Data;
 using PoS_Placeholder.Server.Logging;
 using PoS_Placeholder.Server.Models;
+using PoS_Placeholder.Server.Repositories;
 using PoS_Placeholder.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -33,6 +34,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("AZURE_SQL_CONNECTIONSTRING"));
 });
+
+builder.Services.AddScoped<ProductRepository>();
+builder.Services.AddScoped<ProductVariationRepository>();
 
 builder.Logging.AddLogger(configuration =>
 {

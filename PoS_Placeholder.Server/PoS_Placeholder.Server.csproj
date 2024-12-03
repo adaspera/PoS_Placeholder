@@ -32,6 +32,7 @@
     <ProjectReference Include="..\pos_placeholder.client\pos_placeholder.client.esproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
+
   </ItemGroup>
 
 

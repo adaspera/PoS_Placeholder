@@ -32,11 +32,19 @@ export const getProductVariations = async (productId) => {
     }
 };
 
-export const addProductVariation = async (product) => {
+export const addProductVariation = async (productVariation) => {
     try {
-        return await apiService.post("/api/productVariations", product);
+        return await apiService.post("/api/productVariations", productVariation);
     }  catch (e) {
         console.error("Error creating productVariation:", e);
+    }
+};
+
+export const updateProductVariation = async (productVariation) => {
+    try {
+        return await apiService.put("/api/productVariations", productVariation);
+    }  catch (e) {
+        console.error("Error updating productVariation:", e);
     }
 };
 

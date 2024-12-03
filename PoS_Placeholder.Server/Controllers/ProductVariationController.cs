@@ -7,6 +7,7 @@ using PoS_Placeholder.Server.Data;
 using PoS_Placeholder.Server.Models;
 using PoS_Placeholder.Server.Models.Dto;
 using PoS_Placeholder.Server.Models.Enum;
+using PoS_Placeholder.Server.Repositories;
 using PoS_Placeholder.Server.Services;
 
 namespace PoS_Placeholder.Server.Controllers;
@@ -15,15 +16,17 @@ namespace PoS_Placeholder.Server.Controllers;
 [Route("/api/productVariations")]
 public class ProductVariationController : ControllerBase
 {
-    private readonly ApplicationDbContext _db;
+    private readonly ProductVariationRepository _variationRepository;
+    private readonly ProductRepository _productRepository;
     private readonly UserManager<User> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
     private readonly IImageService _imageService;
 
-    public ProductVariationController(ApplicationDbContext db, UserManager<User> userManager,
+    public ProductVariationController(ProductVariationRepository productVariationRepository, ProductRepository productRepository, UserManager<User> userManager,
         RoleManager<IdentityRole> roleManager, IImageService imageService, IConfiguration configuration)
     {
-        _db = db;
+        _variationRepository = productVariationRepository;
+        _productRepository = productRepository;
         _userManager = userManager;
         _roleManager = roleManager;
         _imageService = imageService;
@@ -46,13 +49,11 @@ public class ProductVariationController : ControllerBase
 
         var userBusinessId = user.BusinessId;
 
-        var productVariations = await _db.ProductVariations
-            .Where(pv => pv.ProductId == id && pv.Product.BusinessId == userBusinessId)
-            .ToListAsync();
+        var productVariations = await _variationRepository.GetByProductAndBusinessId(id, userBusinessId);
 
          if (productVariations == null)
          {
-             return NotFound("Product not found.");
+             return NotFound("Product variations not found.");
          }
          
         return Ok(productVariations);
@@ -92,8 +93,8 @@ public class ProductVariationController : ControllerBase
                 ProductId = createProductVariationDto.ProductId
             };
             
-            _db.ProductVariations.Add(newProductVariation);
-            await _db.SaveChangesAsync();
+            _variationRepository.Add(newProductVariation);
+            await _variationRepository.SaveChangesAsync();
             
             return CreatedAtRoute("GetAllProductVariationsById", new { id = newProductVariation.Id }, newProductVariation);
         }
@@ -124,13 +125,13 @@ public class ProductVariationController : ControllerBase
 
             var userBusinessId = user.BusinessId;
 
-            var productVariation = await _db.ProductVariations.FindAsync(updateProductVariationDto.Id);
+            var productVariation = await _variationRepository.GetByIdAsync(updateProductVariationDto.Id);
             if (productVariation == null)
             {
                 return NotFound("ProductVariation not found.");
             }
 
-            var product = await _db.Products.FindAsync(updateProductVariationDto.ProductId);
+            var product = await _productRepository.GetByIdAsync(updateProductVariationDto.ProductId);
             if (productVariation == null)
             {
                 return NotFound("Product not found.");
@@ -142,7 +143,7 @@ public class ProductVariationController : ControllerBase
             }
             
             // If user passed the new image file, we must delete old one and upload new image to image storage container
-            if (updateProductVariationDto.PictureFile != null || updateProductVariationDto.PictureFile.Length > 0)
+            if (updateProductVariationDto.PictureFile != null || updateProductVariationDto.PictureFile?.Length > 0)
             {
                 string oldFileName = productVariation.PictureUrl.Split('/').Last();
                 await _imageService.DeleteFileBlobAsync(oldFileName);
@@ -153,18 +154,20 @@ public class ProductVariationController : ControllerBase
             
                 productVariation.PictureUrl = pictureUrl;
             }
-
-            productVariation.Name = updateProductVariationDto.Name;
-            productVariation.Price = updateProductVariationDto.Price;
+            if (updateProductVariationDto.Name != null)
+                productVariation.Name = updateProductVariationDto.Name;
             
-            _db.Products.Update(product);
-            await _db.SaveChangesAsync();
+            if (updateProductVariationDto.Price != null)
+                productVariation.Price = updateProductVariationDto.Price;
+            
+            _variationRepository.Update(productVariation);
+            await _variationRepository.SaveChangesAsync();
 
             return Ok(productVariation);
         }
         catch (Exception ex)
         {
-            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            return StatusCode(StatusCodes.Status500InternalServerError, $"Error: {ex.Message}, StackTrace: {ex.StackTrace}");
         }
     }
 
@@ -187,13 +190,13 @@ public class ProductVariationController : ControllerBase
 
             var userBusinessId = user.BusinessId;
 
-            var productVariation = await _db.ProductVariations.FindAsync(id);
+            var productVariation = await _variationRepository.GetByIdAsync(id);
             if (productVariation == null)
             {
                 return NotFound("ProductVariation not found.");
             }
 
-            var product = await _db.Products.FindAsync(productVariation.ProductId);
+            var product = await _productRepository.GetByIdAsync(productVariation.ProductId);
             if (product == null)
             {
                 return NotFound("Product not found.");
@@ -204,8 +207,8 @@ public class ProductVariationController : ControllerBase
                 return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to delete this product.");
             }
 
-            _db.ProductVariations.Remove(productVariation);
-            await _db.SaveChangesAsync();
+            _variationRepository.Remove(productVariation);
+            await _variationRepository.SaveChangesAsync();
 
             return Ok();
         }
