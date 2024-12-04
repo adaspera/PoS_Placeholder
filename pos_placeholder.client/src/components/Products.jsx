@@ -44,7 +44,7 @@ const Products = () => {
 
 
     useEffect( () => {
-        fetchProducts()
+        fetchProducts();
     },[]);
 
     const toggleAccordion = async (id) => {

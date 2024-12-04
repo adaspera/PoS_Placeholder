@@ -22,8 +22,8 @@ const NavMenu = () => {
                         <div>Business</div>
                     </NavLink>
                     <NavLink tag={Link} to="/tax" className="text-dark d-flex flex-column align-items-center" style={{width: "80px"}}>
-                        <i className="bi-bank" style={{fontSize: '20px'}}/>
-                        <div>Tax</div>
+                        <i className="bi-percent" style={{fontSize: '20px'}}/>
+                        <div>Discount</div>
                     </NavLink>
                     <NavLink tag={Link} to="/products" className="text-dark d-flex flex-column align-items-center" style={{width: "80px"}}>
                         <i className="bi-box-seam" style={{fontSize: '20px'}}/>
