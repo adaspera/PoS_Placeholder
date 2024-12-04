@@ -57,6 +57,8 @@ builder.Services.AddSingleton<IImageService>(provider =>
     return new ImageService(containerName, blobServiceClient);
 });
 
+builder.Services.AddSingleton<ITaxService, TaxService>();
+
 builder.Services.AddIdentity<User, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
 
 var key = builder.Configuration.GetValue<string>("JwtSettings:Secret");

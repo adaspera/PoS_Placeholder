@@ -110,7 +110,6 @@ public class ProductsController : ControllerBase
         }
     }
 
-    //Updates but doesnt save old entry TODO
     [HttpPut]
     [Authorize(Roles = nameof(UserRole.Owner))]
     public async Task<IActionResult> UpdateProduct([FromForm] UpdateProductDto updateProductDto)

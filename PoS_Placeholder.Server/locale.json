@@ -1,0 +1,15 @@
+﻿{
+  "USA": {
+    "currency": "USD",
+    "taxes": [
+      { "nameOfTax": "VAT", "taxAmount": 10.00, "isPercentage": true },
+      { "nameOfTax": "Excise Duty", "taxAmount": 5.00, "isPercentage": true }
+    ]
+  },
+  "LIT": {
+    "currency": "EUR",
+    "taxes": [
+      { "nameOfTax": "VAT", "taxAmount": 21.00, "isPercentage": true }
+    ]
+  }
+}
