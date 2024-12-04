@@ -57,7 +57,11 @@ builder.Services.AddSingleton<IImageService>(provider =>
     return new ImageService(containerName, blobServiceClient);
 });
 
-builder.Services.AddSingleton<ITaxService, TaxService>();
+builder.Services.AddSingleton<ITaxService>(provider =>
+{
+    var filePath = Path.Combine(AppContext.BaseDirectory, "locale.json");
+    return new TaxService(filePath);
+});
 
 builder.Services.AddIdentity<User, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
 
