@@ -16,6 +16,14 @@ export const addProduct = async (product) => {
     }
 };
 
+export const updateProduct = async (product) => {
+    try {
+        return await apiService.put("/api/products", product);
+    }  catch (e) {
+        console.error("Error updating product:", e);
+    }
+};
+
 export const deleteProduct = async (id) => {
     try {
         await apiService.delete(`/api/products/${id}`);

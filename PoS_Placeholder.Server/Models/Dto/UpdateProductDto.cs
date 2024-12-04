@@ -8,11 +8,8 @@ public class UpdateProductDto
     public int Id { get; set; }
     
     [MaxLength(255)]
-    public string Name { get; set; }
+    public string? Name { get; set; }
 
     [MaxLength(255)]
-    public string ItemGroup { get; set; }
-    
-    [Required]
-    public int ProductId { get; set; }
+    public string? ItemGroup { get; set; }
 }

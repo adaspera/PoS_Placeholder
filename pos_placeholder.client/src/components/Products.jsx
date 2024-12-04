@@ -7,7 +7,7 @@ import {
     Button,
     Col, Form, FormGroup,
     Input,
-    Label,
+    Label, Modal, ModalBody, ModalFooter, ModalHeader,
     Row
 } from "reactstrap";
 import * as ProductApi from "@/api/productApi.jsx";
@@ -22,12 +22,12 @@ const Products = () => {
     const [itemName, setItemName] = useState('');
     const [itemGroup, setItemGroup] = useState('');
 
-    const [variationName, setVariationName] = useState('');
-    const [variationPrice, setVariationPrice] = useState('');
-    const [variationImage, setVariationImage] = useState({});
+    const [editProductName, setEditProductName] = useState('');
+    const [editProductGroup, setEditProductGroup] = useState('');
 
     const [isAddVariationFormOpen, setIsAddVariationFormOpen] = useState(false);
     const [editVariationFormOpenFor, setEditVariationFormOpenFor] = useState('');
+    const [editProductFormOpenFor, setEditProductFormOpenFor] = useState('');
 
     const [open, setOpen] = useState(null);
 
@@ -54,7 +54,6 @@ const Products = () => {
         } else {
             setOpen(id);
             setIsAddVariationFormOpen(false);
-            handleClearVariation();
             await fetchProductVariations(id);
         }
     };
@@ -77,18 +76,33 @@ const Products = () => {
         setProducts([...products, createdProduct]);
     };
 
+    const updateProduct = async (item) => {
+        const updatedProduct = new FormData();
+
+        updatedProduct.append("id", item.id);
+        if (editProductName !== '')
+            updatedProduct.append("name", editProductName);
+        if (editProductGroup !== '')
+            updatedProduct.append("itemGroup", editProductGroup);
+
+        const newProduct = await ProductApi.updateProduct(updatedProduct);
+        setProducts(
+            products.map((v) => (v.id === newProduct.id ? newProduct : v))
+        );
+        handleClearEditProduct();
+    };
+
     const handleClearProduct = () => {
         setItemName('');
         setItemGroup('');
     };
 
-    const handleClearVariation = () => {
-        setVariationName('');
-        setVariationPrice('');
-        setVariationImage(null);
+    const handleClearEditProduct = () => {
+        setEditProductName('');
+        setEditProductGroup('');
+        setEditProductFormOpenFor('');
+    };
 
-        setIsAddVariationFormOpen(false);
-    }
 
     const handleAddVariation = async (productId, formData) => {
         const createdVariation = await ProductApi.addProductVariation(formData);
@@ -109,6 +123,48 @@ const Products = () => {
         return <div>Loading...</div>;
     }
 
+    const editProductForm = () => {
+        const item = products.find(p => p.id === editProductFormOpenFor);
+        if (!item) return null;
+        return (
+            <Modal isOpen={editProductFormOpenFor !== ''} fade={false} size="lg" centered={true}>
+                <ModalHeader>
+                    {item.name} in group {item.itemGroup}
+                </ModalHeader>
+                <ModalBody>
+                    <Form>
+                        <FormGroup row>
+                            <Label sm={3}>Product Name</Label>
+                            <Col sm={9}>
+                                <Input
+                                    value={editProductName}
+                                    onChange={(e) => setEditProductName(e.target.value)}
+                                />
+                            </Col>
+                        </FormGroup>
+                        <FormGroup row>
+                            <Label sm={3}>Product group</Label>
+                            <Col sm={9}>
+                                <Input
+                                    value={editProductGroup}
+                                    onChange={(e) => setEditProductGroup(e.target.value)}
+                                />
+                            </Col>
+                        </FormGroup>
+                    </Form>
+                </ModalBody>
+                <ModalFooter>
+                    <Button color="success" className="me-3" onClick={() => updateProduct(item)}>
+                        Update
+                    </Button>
+                    <Button color="danger" onClick={handleClearEditProduct}>
+                        Cancel
+                    </Button>
+                </ModalFooter>
+            </Modal>
+        );
+    };
+
 
     return (
         <Row style={{ height: "85vh" }}>
@@ -120,9 +176,23 @@ const Products = () => {
                             <AccordionHeader targetId={item.id.toString()}>
                                 <div className="d-flex justify-content-between w-100 me-3">
                                     {item.name}
-                                    <Button color="danger" onClick={() => removeProduct(item.id)} className="ms-auto">
-                                        <i className="bi-trash"></i>
-                                    </Button>
+                                    <div>
+                                        <Button
+                                            color="secondary"
+                                            outline
+                                            onClick={() => setEditProductFormOpenFor(item.id)}
+                                            className="me-3"
+                                        >
+                                            <i className="bi-pencil"></i>
+                                        </Button>
+                                        <Button
+                                            color="danger"
+                                            onClick={() => removeProduct(item.id)}
+                                            className="ms-auto"
+                                        >
+                                            <i className="bi-trash"></i>
+                                        </Button>
+                                    </div>
                                 </div>
                             </AccordionHeader>
                             <AccordionBody accordionId={item.id.toString()}>
@@ -183,6 +253,7 @@ const Products = () => {
                         </AccordionItem>
                     ))}
                 </Accordion>
+                {editProductForm()}
             </Col>
             <Col className="border rounded shadow-sm m-2 p-4">
                 <h4 className="p-2 d-flex justify-content-center">Create new product</h4>
