@@ -18,6 +18,21 @@ public class ApplicationDbContext : IdentityDbContext<User>
     public DbSet<ProductVariation> ProductVariations { get; set; }
     public DbSet<Order> Orders { get; set; }
     public DbSet<ProductArchive> ProductsArchive { get; set; }
+    
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+        
+        modelBuilder.Entity<Order>()
+            .HasOne(o => o.User)
+            .WithMany(u => u.Orders)
+            .OnDelete(DeleteBehavior.Restrict);
+        
+        modelBuilder.Entity<Order>()
+            .HasOne(o => o.Business)
+            .WithMany(b => b.Orders)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
 }
 
 // dotnet ef migrations add "migrationName"

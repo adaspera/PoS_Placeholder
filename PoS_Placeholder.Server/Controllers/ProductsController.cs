@@ -1,14 +1,10 @@
-﻿using System.Net;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using PoS_Placeholder.Server.Data;
 using PoS_Placeholder.Server.Models;
 using PoS_Placeholder.Server.Models.Dto;
 using PoS_Placeholder.Server.Models.Enum;
 using PoS_Placeholder.Server.Repositories;
-using PoS_Placeholder.Server.Services;
 
 namespace PoS_Placeholder.Server.Controllers;
 
@@ -18,16 +14,11 @@ public class ProductsController : ControllerBase
 {
     private readonly ProductRepository _productRepository;
     private readonly UserManager<User> _userManager;
-    private readonly RoleManager<IdentityRole> _roleManager;
-    private readonly IImageService _imageService;
 
-    public ProductsController(ProductRepository productRepository, UserManager<User> userManager,
-        RoleManager<IdentityRole> roleManager, IImageService imageService, IConfiguration configuration)
+    public ProductsController(ProductRepository productRepository, UserManager<User> userManager)
     {
         _productRepository = productRepository;
         _userManager = userManager;
-        _roleManager = roleManager;
-        _imageService = imageService;
     }
 
     [HttpGet]
@@ -43,7 +34,7 @@ public class ProductsController : ControllerBase
         var userBusinessId = user.BusinessId;
         var businessProducts = await _productRepository.GetWhereAsync(product => product.BusinessId == userBusinessId);
 
-        
+
         return Ok(businessProducts);
     }
 
@@ -83,7 +74,7 @@ public class ProductsController : ControllerBase
             {
                 return BadRequest(ModelState);
             }
-            
+
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
@@ -101,7 +92,7 @@ public class ProductsController : ControllerBase
 
             _productRepository.Add(newProduct);
             await _productRepository.SaveChangesAsync();
-            
+
             return CreatedAtRoute("GetProductById", new { id = newProduct.Id }, newProduct);
         }
         catch (Exception ex)
@@ -142,11 +133,10 @@ public class ProductsController : ControllerBase
 
             if (updateProductDto.Name != null)
                 product.Name = updateProductDto.Name;
-            
+
             if (updateProductDto.ItemGroup != null)
                 product.ItemGroup = updateProductDto.ItemGroup;
 
-            
 
             _productRepository.Update(product);
             await _productRepository.SaveChangesAsync();
@@ -169,7 +159,7 @@ public class ProductsController : ControllerBase
             {
                 return BadRequest(ModelState);
             }
-            
+
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {

@@ -19,10 +19,16 @@ public class Order
     public OrderStatus Status { get; set; }
     
     [Required]
-    public int UserId { get; set; }
+    public string UserId { get; set; }
     
     [ForeignKey("UserId")]
     public User User { get; set; }
+    
+    [Required]
+    public int BusinessId { get; set; }
+    
+    [ForeignKey("BusinessId")]
+    public Business Business { get; set; }
     
     // Navigation Properties
     public ICollection<ProductArchive> Products { get; set; }
