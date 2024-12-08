@@ -21,4 +21,7 @@ public class Product
     
     [ForeignKey("BusinessId")]
     public Business Business { get; set; }
+    
+    // Navigation properties
+    public ICollection<ProductVariation> ProductVariations { get; set; }
 }

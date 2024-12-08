@@ -132,7 +132,7 @@ const Home = () => {
                         <h6>{variation.name}</h6>
                         <p>Price: {variation.price} €</p>
                         <p>In Stock: {variation.inventoryQuantity}</p>
-                        {variation.picture && <img src={variation.picture} alt={variation.name} width="50" />}
+                        {variation.pictureUrl && <img src={variation.pictureUrl} alt={variation.name} width="50" />}
                     </div>
                 ))}
             </ModalBody>
