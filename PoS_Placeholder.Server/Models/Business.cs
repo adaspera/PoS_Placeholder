@@ -40,4 +40,5 @@ public class Business
     // Navigation properties
     public ICollection<User> Users { get; set; }
     public ICollection<Product> Products { get; set; }
+    public ICollection<Order> Orders { get; set; }
 }

@@ -21,8 +21,9 @@ public class User : IdentityUser
     [Required]
     public int BusinessId { get; set; }
     
-    // Navigation Property
     [ForeignKey("BusinessId")]
     public Business Business { get; set; }
     
+    // Navigation Properties
+    public ICollection<Order> Orders { get; set; }
 }

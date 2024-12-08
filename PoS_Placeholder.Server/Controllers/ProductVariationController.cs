@@ -1,9 +1,6 @@
-using System.Net;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using PoS_Placeholder.Server.Data;
 using PoS_Placeholder.Server.Models;
 using PoS_Placeholder.Server.Models.Dto;
 using PoS_Placeholder.Server.Models.Enum;
@@ -19,19 +16,17 @@ public class ProductVariationController : ControllerBase
     private readonly ProductVariationRepository _variationRepository;
     private readonly ProductRepository _productRepository;
     private readonly UserManager<User> _userManager;
-    private readonly RoleManager<IdentityRole> _roleManager;
     private readonly IImageService _imageService;
 
-    public ProductVariationController(ProductVariationRepository productVariationRepository, ProductRepository productRepository, UserManager<User> userManager,
-        RoleManager<IdentityRole> roleManager, IImageService imageService, IConfiguration configuration)
+    public ProductVariationController(ProductVariationRepository productVariationRepository,
+        ProductRepository productRepository, UserManager<User> userManager, IImageService imageService)
     {
         _variationRepository = productVariationRepository;
         _productRepository = productRepository;
         _userManager = userManager;
-        _roleManager = roleManager;
         _imageService = imageService;
     }
-    
+
     [HttpGet("{id:int}", Name = "GetAllProductVariationsById")]
     [Authorize]
     public async Task<IActionResult> GetAllProductVariationsById(int id)
@@ -51,17 +46,18 @@ public class ProductVariationController : ControllerBase
 
         var productVariations = await _variationRepository.GetByProductAndBusinessId(id, userBusinessId);
 
-         if (productVariations == null)
-         {
-             return NotFound("Product variations not found.");
-         }
-         
+        if (productVariations == null)
+        {
+            return NotFound("Product variations not found.");
+        }
+
         return Ok(productVariations);
     }
-    
+
     [HttpPost]
     [Authorize(Roles = nameof(UserRole.Owner))]
-    public async Task<IActionResult> CreateProductVariation([FromForm] CreateProductVariationDto createProductVariationDto)
+    public async Task<IActionResult> CreateProductVariation(
+        [FromForm] CreateProductVariationDto createProductVariationDto)
     {
         try
         {
@@ -69,18 +65,18 @@ public class ProductVariationController : ControllerBase
             {
                 return BadRequest(ModelState);
             }
-            
+
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
                 return Unauthorized("User not found.");
             }
-            
+
             if (createProductVariationDto.PictureFile == null || createProductVariationDto.PictureFile.Length == 0)
             {
                 return BadRequest("Picture file is required.");
             }
-        
+
             string fileName = $"{Guid.NewGuid()}{Path.GetExtension(createProductVariationDto.PictureFile.FileName)}";
             string pictureUrl =
                 await _imageService.UploadFileBlobAsync(fileName, createProductVariationDto.PictureFile);
@@ -92,22 +88,24 @@ public class ProductVariationController : ControllerBase
                 Price = createProductVariationDto.Price,
                 ProductId = createProductVariationDto.ProductId
             };
-            
+
             _variationRepository.Add(newProductVariation);
             await _variationRepository.SaveChangesAsync();
-            
-            return CreatedAtRoute("GetAllProductVariationsById", new { id = newProductVariation.Id }, newProductVariation);
+
+            return CreatedAtRoute("GetAllProductVariationsById", new { id = newProductVariation.Id },
+                newProductVariation);
         }
         catch (Exception e)
         {
-            return StatusCode(StatusCodes.Status500InternalServerError, $"Error: {e.Message}, StackTrace: {e.StackTrace}");
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                $"Error: {e.Message}, StackTrace: {e.StackTrace}");
         }
-        
     }
-    
+
     [HttpPut]
     [Authorize(Roles = nameof(UserRole.Owner))]
-    public async Task<IActionResult> UpdateProductVariation([FromForm] UpdateProductVariationDto updateProductVariationDto)
+    public async Task<IActionResult> UpdateProductVariation(
+        [FromForm] UpdateProductVariationDto updateProductVariationDto)
     {
         try
         {
@@ -135,30 +133,32 @@ public class ProductVariationController : ControllerBase
             {
                 return NotFound("Product not found.");
             }
-            
+
             if (userBusinessId != product.BusinessId)
             {
                 return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to update this product.");
             }
-            
+
             // If user passed the new image file, we must delete old one and upload new image to image storage container
             if (updateProductVariationDto.PictureFile != null || updateProductVariationDto.PictureFile?.Length > 0)
             {
                 string oldFileName = productVariation.PictureUrl.Split('/').Last();
                 await _imageService.DeleteFileBlobAsync(oldFileName);
-            
-                string newFileName = $"{Guid.NewGuid()}{Path.GetExtension(updateProductVariationDto.PictureFile.FileName)}";
+
+                string newFileName =
+                    $"{Guid.NewGuid()}{Path.GetExtension(updateProductVariationDto.PictureFile.FileName)}";
                 string pictureUrl =
                     await _imageService.UploadFileBlobAsync(newFileName, updateProductVariationDto.PictureFile);
-            
+
                 productVariation.PictureUrl = pictureUrl;
             }
+
             if (updateProductVariationDto.Name != null)
                 productVariation.Name = updateProductVariationDto.Name;
-            
+
             if (updateProductVariationDto.Price != null)
                 productVariation.Price = updateProductVariationDto.Price;
-            
+
             _variationRepository.Update(productVariation);
             await _variationRepository.SaveChangesAsync();
 
@@ -166,7 +166,8 @@ public class ProductVariationController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(StatusCodes.Status500InternalServerError, $"Error: {ex.Message}, StackTrace: {ex.StackTrace}");
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                $"Error: {ex.Message}, StackTrace: {ex.StackTrace}");
         }
     }
 
@@ -180,7 +181,7 @@ public class ProductVariationController : ControllerBase
             {
                 return BadRequest(ModelState);
             }
-            
+
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
@@ -216,5 +217,4 @@ public class ProductVariationController : ControllerBase
             return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
         }
     }
-
 }

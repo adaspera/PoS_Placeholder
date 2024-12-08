@@ -203,6 +203,39 @@ namespace PoS_Placeholder.Server.Migrations
                     b.ToTable("Businesses");
                 });
 
+            modelBuilder.Entity("PoS_Placeholder.Server.Models.Order", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BusinessId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("Tip")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BusinessId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Orders");
+                });
+
             modelBuilder.Entity("PoS_Placeholder.Server.Models.Product", b =>
                 {
                     b.Property<int>("Id")
@@ -229,6 +262,35 @@ namespace PoS_Placeholder.Server.Migrations
                     b.HasIndex("BusinessId");
 
                     b.ToTable("Products");
+                });
+
+            modelBuilder.Entity("PoS_Placeholder.Server.Models.ProductArchive", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("ProductsArchive");
                 });
 
             modelBuilder.Entity("PoS_Placeholder.Server.Models.ProductVariation", b =>
@@ -395,6 +457,25 @@ namespace PoS_Placeholder.Server.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("PoS_Placeholder.Server.Models.Order", b =>
+                {
+                    b.HasOne("PoS_Placeholder.Server.Models.Business", "Business")
+                        .WithMany("Orders")
+                        .HasForeignKey("BusinessId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PoS_Placeholder.Server.Models.User", "User")
+                        .WithMany("Orders")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Business");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("PoS_Placeholder.Server.Models.Product", b =>
                 {
                     b.HasOne("PoS_Placeholder.Server.Models.Business", "Business")
@@ -406,10 +487,21 @@ namespace PoS_Placeholder.Server.Migrations
                     b.Navigation("Business");
                 });
 
+            modelBuilder.Entity("PoS_Placeholder.Server.Models.ProductArchive", b =>
+                {
+                    b.HasOne("PoS_Placeholder.Server.Models.Order", "Order")
+                        .WithMany("Products")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+                });
+
             modelBuilder.Entity("PoS_Placeholder.Server.Models.ProductVariation", b =>
                 {
                     b.HasOne("PoS_Placeholder.Server.Models.Product", "Product")
-                        .WithMany()
+                        .WithMany("ProductVariations")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -430,9 +522,26 @@ namespace PoS_Placeholder.Server.Migrations
 
             modelBuilder.Entity("PoS_Placeholder.Server.Models.Business", b =>
                 {
+                    b.Navigation("Orders");
+
                     b.Navigation("Products");
 
                     b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("PoS_Placeholder.Server.Models.Order", b =>
+                {
+                    b.Navigation("Products");
+                });
+
+            modelBuilder.Entity("PoS_Placeholder.Server.Models.Product", b =>
+                {
+                    b.Navigation("ProductVariations");
+                });
+
+            modelBuilder.Entity("PoS_Placeholder.Server.Models.User", b =>
+                {
+                    b.Navigation("Orders");
                 });
 #pragma warning restore 612, 618
         }
