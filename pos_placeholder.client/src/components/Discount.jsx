@@ -44,7 +44,7 @@ const Discount = () => {
     };
 
     const removeDiscount = async (id) => {
-        //await discountApi.deleteDiscount(id);
+        await discountApi.deleteDiscount(id);
         setDiscounts(discounts.filter(discount => discount.id !== id));
     }
     
@@ -56,9 +56,24 @@ const Discount = () => {
       
     }
 
-    const handleCreateDiscount = async () => {}
+    const handleCreateDiscount = async () => {
+        const newDiscount = {
+            amount: discountAmount,
+            startDate: discountStartDate,
+            endDate: discountEndDate,
+            isPercentage: isDiscountPercentage
+        }
 
-    const handleClearDiscount = async () => {}
+        const createdDiscount = await discountApi.createDiscount(newDiscount);
+        setDiscounts([...discounts, createdDiscount]);
+    }
+
+    const handleClearDiscount = async () => {
+        setDiscountAmount('');
+        setDiscountStartDate('');
+        setDiscountEndDate('');
+        setIsDiscountPercentage(true);
+    }
 
     if (isLoading) {
         return <div>Loading...</div>;
@@ -73,7 +88,8 @@ const Discount = () => {
                         <AccordionItem key={discount.id}>
                             <AccordionHeader targetId={discount.id.toString()}>
                                 <div className="d-flex justify-content-between w-100 me-3">
-                                    {discount.amount} {discount.isPercentage ? '%' : '$'} discount until {discount.endDate}
+                                    {discount.amount} {discount.isPercentage ? '%' : '$'} discount &#32;
+                                    {new Date(discount.startDate).toLocaleDateString()} to {new Date(discount.endDate).toLocaleDateString()}
                                     <Button
                                         color="danger"
                                         onClick={() => removeDiscount(discount.id)}
@@ -118,17 +134,32 @@ const Discount = () => {
             <Col className="border rounded shadow-sm m-2 p-4">
                 <h4 className="p-2 d-flex justify-content-center">Create new discount</h4>
                 <div className="d-flex justify-content-center mb-1">
-                    <Label className="w-25 d-flex flex-column justify-content-center p-0 m-0">Item name</Label>
+                    <Label className="w-25 d-flex flex-column justify-content-center p-0 m-0">Discount amount</Label>
                     <Input placeholder="Enter discount amount"
                            value={discountAmount}
                            onChange={(e) => setDiscountAmount(e.target.value)}>
                     </Input>
                 </div>
+                <div className="d-flex justify-content-left align-items-center mb-1">
+                    <Label className="w-25 p-0 m-0">Discount is percentage</Label>
+                    <Input checked={isDiscountPercentage}
+                           onChange={(e) => setIsDiscountPercentage(e.target.checked)}
+                           type="checkbox"
+                           className="ms-1"
+                    />
+                </div>
                 <div className="d-flex justify-content-center mb-1">
-                    <Label className="w-25 d-flex flex-column justify-content-center p-0 m-0">Item group</Label>
-                    <Input placeholder="Enter discount start date"
+                    <Label className="w-25 d-flex flex-column justify-content-center p-0 m-0">Start date</Label>
+                    <Input type="date"
                            value={discountStartDate}
                            onChange={(e) => setDiscountStartDate(e.target.value)}>
+                    </Input>
+                </div>
+                <div className="d-flex justify-content-center mb-1">
+                    <Label className="w-25 d-flex flex-column justify-content-center p-0 m-0">End date</Label>
+                    <Input type="date"
+                           value={discountEndDate}
+                           onChange={(e) => setDiscountEndDate(e.target.value)}>
                     </Input>
                 </div>
                 <div className="d-flex justify-content-center mt-5">

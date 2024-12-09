@@ -26,4 +26,10 @@ public class ProductVariation
     
     [ForeignKey("ProductId")]
     public Product Product { get; set; }
+    
+    [Required]
+    public int? DiscountId { get; set; }
+    
+    [ForeignKey("DiscountId")]
+    public Discount? Discount { get; set; }
 }

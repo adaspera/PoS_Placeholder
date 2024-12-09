@@ -35,7 +35,7 @@ public class Repository<T> where T : class
 
     public IEnumerable<T> GetWhere(Expression<Func<T, bool>> expression)
     {
-        return _db.Set<T>().Where(expression);
+        return _db.Set<T>().Where(expression).ToList();
     }
     
     public async Task<IEnumerable<T>> GetWhereAsync(Expression<Func<T, bool>> expression)
@@ -62,7 +62,12 @@ public class Repository<T> where T : class
     {
         _db.Set<T>().Update(entity);
     }
-
+    
+    public void BulkUpdate(IEnumerable<T> entity)
+    {
+        _db.Set<T>().UpdateRange(entity);
+    }
+    
     public int SaveChanges()
     {
         return _db.SaveChanges();

@@ -37,6 +37,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddScoped<ProductRepository>();
 builder.Services.AddScoped<ProductVariationRepository>();
+builder.Services.AddScoped<DiscountRepository>();
 
 builder.Logging.AddLogger(configuration =>
 {
