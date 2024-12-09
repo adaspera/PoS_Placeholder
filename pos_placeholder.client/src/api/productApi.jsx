@@ -1,4 +1,4 @@
-import { apiService } from "./ApiService";
+import {apiService} from "./ApiService";
 
 export const getProducts = async () => {
     try {
@@ -11,7 +11,7 @@ export const getProducts = async () => {
 export const addProduct = async (product) => {
     try {
         return await apiService.post("/api/products", product);
-    }  catch (e) {
+    } catch (e) {
         console.log("Error creating product:", e);
     }
 };
@@ -19,7 +19,7 @@ export const addProduct = async (product) => {
 export const updateProduct = async (product) => {
     try {
         return await apiService.put("/api/products", product);
-    }  catch (e) {
+    } catch (e) {
         console.error("Error updating product:", e);
     }
 };
@@ -43,7 +43,7 @@ export const getProductVariations = async (productId) => {
 export const addProductVariation = async (productVariation) => {
     try {
         return await apiService.post("/api/productVariations", productVariation);
-    }  catch (e) {
+    } catch (e) {
         console.error("Error creating productVariation:", e);
     }
 };
@@ -51,7 +51,7 @@ export const addProductVariation = async (productVariation) => {
 export const updateProductVariation = async (productVariation) => {
     try {
         return await apiService.put("/api/productVariations", productVariation);
-    }  catch (e) {
+    } catch (e) {
         console.error("Error updating productVariation:", e);
     }
 };
