@@ -2,6 +2,7 @@ import {Accordion, AccordionBody, AccordionHeader, AccordionItem, Button, Col, I
 import {useEffect, useState} from "react";
 import * as discountApi from "@/api/discountApi.jsx";
 import * as ProductApi from "@/api/productApi.jsx";
+import {getVariationsByDiscountId} from "@/api/discountApi.jsx";
 
 
 const Discount = () => {
@@ -9,6 +10,7 @@ const Discount = () => {
 
     const [discounts, setDiscounts] = useState([]);
     const [variations, setVariations] = useState([]);
+    const [notIncludedVariations, setNotIncludedVariations] = useState([]);
 
     const [discountAmount, setDiscountAmount] = useState('');
     const [isDiscountPercentage, setIsDiscountPercentage] = useState(true);
@@ -27,19 +29,26 @@ const Discount = () => {
         setIsLoading(false);
     };
 
-    //temp
-    const fetchProductVariations = async (id) => {
-        const HACKID = 2;
-        const fetchedProductVariations = await ProductApi.getProductVariations(HACKID);
+    const fetchIncludedProductVariations = async (id) => {
+        const fetchedProductVariations = await discountApi.getVariationsByDiscountId(id);
         setVariations(fetchedProductVariations);
     };
+
+    const fetchNotIncludedProductVariations = async (id) => {
+        let fetchedProductVariations = await ProductApi.getAllProductVariations(id);
+        fetchedProductVariations = fetchedProductVariations.filter(pv => pv.dsicountId !== id);
+        setNotIncludedVariations(fetchedProductVariations);
+    };
+
     const toggleAccordion = async (id) => {
         if (open === id) {
             setOpen('');
-            setVariations([])
+            setVariations([]);
+            setNotIncludedVariations([]);
         } else {
             setOpen(id);
-            await fetchProductVariations(id);
+            await fetchIncludedProductVariations(id);
+            await fetchNotIncludedProductVariations(id)
         }
     };
 
@@ -49,7 +58,13 @@ const Discount = () => {
     }
     
     const addVariationToDiscount = async (id) => {
-        
+        const variation = variations.find(variation => variation.id === id);
+        setVariations([...variations, variation]);
+        setNotIncludedVariations(variations.filter(variation => variation.id !== id));
+    }
+
+    const removeVariationFromDiscount = async (id) => {
+
     }
     
     const confirmAddVariationToDiscount = () => {
@@ -100,7 +115,35 @@ const Discount = () => {
                                 </div>
                             </AccordionHeader>
                             <AccordionBody accordionId={discount.id.toString()}>
+                                <Row className="pb-2">
+                                    <Button color="secondary" outline onClick={() => confirmAddVariationToDiscount()}>
+                                        Save changes
+                                    </Button>
+                                </Row>
+                                <h5>Discounted products</h5>
                                 {variations.map((variation) => (
+                                    <div key={variation.id}>
+                                        <Row className="mb-2 align-items-center">
+                                            <Col xs="auto">
+                                                <img
+                                                    src={variation.pictureUrl}
+                                                    alt={variation.name}
+                                                    style={{ width: "50px" }}
+                                                />
+                                            </Col>
+                                            <Col>
+                                                <span>{variation.name} - ${variation.price} | Stock: {variation.inventoryQuantity}</span>
+                                            </Col>
+                                            <Col xs="auto">
+                                                <Button color="danger" onClick={() => removeVariationFromDiscount(variation.id)}>
+                                                    <i className="bi-file-minus"></i>
+                                                </Button>
+                                            </Col>
+                                        </Row>
+                                    </div>
+                                ))}
+                                <h5>Available products</h5>
+                                {notIncludedVariations.map((variation) => (
                                     <div key={variation.id}>
                                         <Row className="mb-2 align-items-center">
                                             <Col xs="auto">
@@ -121,11 +164,6 @@ const Discount = () => {
                                         </Row>
                                     </div>
                                 ))}
-                                <Row>
-                                    <Button color="secondary" outline onClick={() => confirmAddVariationToDiscount()}>
-                                        Confirm update
-                                    </Button>
-                                </Row>
                             </AccordionBody>
                         </AccordionItem>
                     ))}

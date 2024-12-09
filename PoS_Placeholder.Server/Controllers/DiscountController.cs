@@ -43,7 +43,7 @@ public class DiscountController : ControllerBase
         return Ok(businessDiscounts);
     }
     
-    [HttpGet("/productVariations/{id:int}")]
+    [HttpGet("productVariations/{id:int}")]
     [Authorize]
     public async Task<IActionResult> GetAllProductVariationsByDiscountId(int id)
     {
