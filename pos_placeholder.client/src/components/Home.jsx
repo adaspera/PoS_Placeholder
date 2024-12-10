@@ -111,6 +111,18 @@ const Home = () => {
         const createdOrder = await orderApi.createOrder(createOrderDto);
     }
 
+    const handlePayNowClick = async() => {
+        const createOrderDto = {
+            Tip: null,
+            OrderItems: order.products.map((item) => ({
+                ProductVariationId: item.productVariationId,
+                Quantity: item.quantity
+            }))
+        }
+        const getOrderPreview = await orderApi.getOrderPreview(createOrderDto);
+        console.log(getOrderPreview);
+    }
+
     const formatProductsInCart = () => {
         const formatedProductsInCart = order.products.map((item, index) => (
             <Row key={index} className="p-2">
@@ -199,7 +211,7 @@ const Home = () => {
                 <div className="d-flex justify-content-center m-2 mt-auto">
                     <Button color="dark" outline className="m-1">Split order</Button>
                     <Button color="dark" outline className="m-1">Pay later</Button>
-                    <Button color="success" className="m-1" onClick={handlePayNow}>Pay now</Button>
+                    <Button color="success" className="m-1" onClick={handlePayNowClick}>Pay now</Button>
                 </div>
             </Col>
             <Col className="border rounded shadow-sm m-2 p-2">

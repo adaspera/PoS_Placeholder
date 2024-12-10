@@ -7,6 +7,7 @@ using PoS_Placeholder.Server.Models;
 using PoS_Placeholder.Server.Models.Dto;
 using PoS_Placeholder.Server.Models.Enum;
 using PoS_Placeholder.Server.Repositories;
+using PoS_Placeholder.Server.Services;
 
 
 namespace PoS_Placeholder.Server.Controllers;
@@ -16,13 +17,16 @@ namespace PoS_Placeholder.Server.Controllers;
 public class OrderController : ControllerBase
 {
     private readonly UserManager<User> _userManager;
-    private readonly ApplicationDbContext _db;
     private readonly OrderRepository _orderRepository;
+    private readonly ITaxService _taxService;
+    private readonly ApplicationDbContext _db;
 
-    public OrderController(UserManager<User> userManager, OrderRepository orderRepository, ApplicationDbContext db)
+    public OrderController(UserManager<User> userManager, OrderRepository orderRepository, ITaxService taxService,
+        ApplicationDbContext db)
     {
         _userManager = userManager;
         _orderRepository = orderRepository;
+        _taxService = taxService;
         _db = db;
     }
 
@@ -92,6 +96,78 @@ public class OrderController : ControllerBase
         return Ok(orderResponseDto);
     }
 
+    [HttpPost("preview")]
+    [Authorize]
+    public async Task<IActionResult> GetOrderPaymentPreview([FromBody] CreateOrderDto createOrderDto)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null)
+            return Unauthorized("User not found.");
+
+        var taxes = _taxService.GetTaxesByCountry("LIT");
+        if (taxes == null)
+            return NotFound("No Taxes found for LIT.");
+
+        decimal subTotal = 0m;
+
+        foreach (var orderItem in createOrderDto.OrderItems)
+        {
+            var productVariation = await _db.ProductVariations
+                .Include(pv => pv.Product)
+                .FirstOrDefaultAsync(pv => pv.Id == orderItem.ProductVariationId);
+
+            if (productVariation == null)
+                return BadRequest($"Product variation with Id {orderItem.ProductVariationId} not found.");
+
+            subTotal += productVariation.Price * orderItem.Quantity;
+        }
+
+        subTotal = Math.Round(subTotal, 2);
+        decimal taxesTotal = 0m;
+        var taxDtos = new List<TaxDto>();
+
+        foreach (var tax in taxes)
+        {
+            decimal taxValue;
+            if (tax.IsPercentage)
+            {
+                taxValue = subTotal * (tax.TaxAmount / 100m);
+            }
+            else
+            {
+                taxValue = tax.TaxAmount;
+            }
+
+            taxesTotal += taxValue;
+            taxDtos.Add(new TaxDto
+            {
+                Name = tax.NameOfTax,
+                Amount = Math.Round(taxValue, 2),
+                IsPercentage = tax.IsPercentage
+            });
+        }
+
+        taxesTotal = Math.Round(taxesTotal, 2);
+        var tip = createOrderDto.Tip ?? 0.00m;
+        decimal total = subTotal + taxesTotal + tip;
+
+        var orderPreviewDto = new OrderPreviewDto
+        {
+            Tip = tip,
+            SubTotal = subTotal,
+            TaxesTotal = taxesTotal,
+            Total = total,
+            Taxes = taxDtos
+        };
+
+        return Ok(orderPreviewDto);
+    }
+
     [HttpPost]
     [Authorize]
     public async Task<IActionResult> CreateOrder([FromBody] CreateOrderDto createOrderDto)
@@ -121,11 +197,11 @@ public class OrderController : ControllerBase
                 _orderRepository.Add(order);
                 await _orderRepository.SaveChangesAsync();
 
-                foreach (var item in createOrderDto.OrderItems)
+                foreach (var orderItem in createOrderDto.OrderItems)
                 {
                     var productVariation = await _db.ProductVariations
                         .Include(pv => pv.Product)
-                        .FirstOrDefaultAsync(pv => pv.Id == item.ProductVariationId);
+                        .FirstOrDefaultAsync(pv => pv.Id == orderItem.ProductVariationId);
 
                     if (productVariation == null)
                     {
@@ -140,7 +216,7 @@ public class OrderController : ControllerBase
                     {
                         FullName = fullName,
                         Price = price,
-                        Quantity = item.Quantity,
+                        Quantity = orderItem.Quantity,
                         OrderId = order.Id,
                     };
 

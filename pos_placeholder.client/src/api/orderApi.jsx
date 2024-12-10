@@ -16,3 +16,11 @@ export const createOrder = async (products) => {
     }
 }
 
+export const getOrderPreview = async (products) => {
+    try {
+        return await apiService.post("/api/orders/preview", products);
+    } catch (e) {
+        console.log("Error creating order preview:", e);
+    }
+}
+
