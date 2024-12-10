@@ -16,15 +16,12 @@ namespace PoS_Placeholder.Server.Controllers;
 public class OrderController : ControllerBase
 {
     private readonly UserManager<User> _userManager;
-    private readonly RoleManager<IdentityRole> _roleManager;
     private readonly ApplicationDbContext _db;
     private readonly OrderRepository _orderRepository;
 
-    public OrderController(UserManager<User> userManager, RoleManager<IdentityRole> roleManager,
-        OrderRepository orderRepository, ApplicationDbContext db)
+    public OrderController(UserManager<User> userManager, OrderRepository orderRepository, ApplicationDbContext db)
     {
         _userManager = userManager;
-        _roleManager = roleManager;
         _orderRepository = orderRepository;
         _db = db;
     }
