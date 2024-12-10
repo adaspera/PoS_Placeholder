@@ -32,6 +32,15 @@ export const updateDiscount = async (discount) => {
     }
 };
 
+export const addProductVariationsToDiscount = async (id, dto) => {
+    try {
+        return await apiService.put(`/api/discounts/${id}`, dto);
+    } catch (e) {
+        console.error("Error updating discount:", e);
+    }
+};
+
+
 export const deleteDiscount = async (id) => {
     try {
         return await apiService.delete(`/api/discounts/${id}`);

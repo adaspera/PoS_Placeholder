@@ -2,7 +2,7 @@ import {Accordion, AccordionBody, AccordionHeader, AccordionItem, Button, Col, I
 import {useEffect, useState} from "react";
 import * as discountApi from "@/api/discountApi.jsx";
 import * as ProductApi from "@/api/productApi.jsx";
-import {getVariationsByDiscountId} from "@/api/discountApi.jsx";
+import {addProductVariationsToDiscount, getVariationsByDiscountId} from "@/api/discountApi.jsx";
 
 
 const Discount = () => {
@@ -16,6 +16,8 @@ const Discount = () => {
     const [isDiscountPercentage, setIsDiscountPercentage] = useState(true);
     const [discountStartDate, setDiscountStartDate] = useState(null);
     const [discountEndDate, setDiscountEndDate] = useState(null);
+
+    const [changeLogs, setChangeLogs] = useState([]);
 
     const [open, setOpen] = useState('');
 
@@ -36,7 +38,7 @@ const Discount = () => {
 
     const fetchNotIncludedProductVariations = async (id) => {
         let fetchedProductVariations = await ProductApi.getAllProductVariations(id);
-        fetchedProductVariations = fetchedProductVariations.filter(pv => pv.dsicountId !== id);
+        fetchedProductVariations = fetchedProductVariations.filter(pv => pv.discountId !== Number(id));
         setNotIncludedVariations(fetchedProductVariations);
     };
 
@@ -58,17 +60,23 @@ const Discount = () => {
     }
     
     const addVariationToDiscount = async (id) => {
-        const variation = variations.find(variation => variation.id === id);
+        const variation = notIncludedVariations.find(variation => variation.id === id);
+        setChangeLogs([...changeLogs, {productVariationId: id, isAdd: true} ]);
         setVariations([...variations, variation]);
-        setNotIncludedVariations(variations.filter(variation => variation.id !== id));
+        setNotIncludedVariations(notIncludedVariations.filter(variation => variation.id !== id));
     }
 
     const removeVariationFromDiscount = async (id) => {
-
+        const variation = variations.find(variation => variation.id === id);
+        setChangeLogs([...changeLogs, {productVariationId: id, isAdd: false} ]);
+        setNotIncludedVariations([...notIncludedVariations, variation]);
+        setVariations(variations.filter(variation => variation.id !== id));
     }
     
-    const confirmAddVariationToDiscount = () => {
-      
+    const confirmAddVariationToDiscount = async (id) => {
+        await discountApi.addProductVariationsToDiscount(id, changeLogs);
+        setChangeLogs([]);
+        setOpen('');
     }
 
     const handleCreateDiscount = async () => {
@@ -116,7 +124,7 @@ const Discount = () => {
                             </AccordionHeader>
                             <AccordionBody accordionId={discount.id.toString()}>
                                 <Row className="pb-2">
-                                    <Button color="secondary" outline onClick={() => confirmAddVariationToDiscount()}>
+                                    <Button color="secondary" outline onClick={() => confirmAddVariationToDiscount(discount.id)}>
                                         Save changes
                                     </Button>
                                 </Row>

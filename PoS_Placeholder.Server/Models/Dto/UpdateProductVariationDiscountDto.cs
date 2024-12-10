@@ -5,9 +5,10 @@ namespace PoS_Placeholder.Server.Models.Dto;
 public class UpdateProductVariationDiscountDto
 {
     [Required] 
-    public int ProductVariationId;
+    [Key]
+    public int ProductVariationId { get; set; }
 
     // Determines if we are adding 'true' or removing 'false' a discount from productVariation
     [Required] 
-    public bool IsAdd;
+    public bool IsAdd { get; set; }
 }

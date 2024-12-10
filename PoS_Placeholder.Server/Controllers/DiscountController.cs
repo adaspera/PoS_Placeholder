@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Runtime.InteropServices.JavaScript;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using PoS_Placeholder.Server.Models;
@@ -17,12 +18,14 @@ public class DiscountController : ControllerBase
     private DiscountRepository _discountRepository;
     private ProductVariationRepository _variationRepository;
     private UserManager<User> _userManager;
+    private ILogger<DiscountController> _logger;
     
-    public DiscountController(DiscountRepository repository, UserManager<User> userManager, ProductVariationRepository variationRepository)
+    public DiscountController(DiscountRepository repository, UserManager<User> userManager, ProductVariationRepository variationRepository, ILogger<DiscountController> logger)
     {
         _discountRepository = repository;
         _variationRepository = variationRepository;
         _userManager = userManager;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -99,7 +102,7 @@ public class DiscountController : ControllerBase
     
     [HttpPut("{id:int}")]
     [Authorize(Roles = nameof(UserRole.Owner))]
-    public async Task<IActionResult> AddProductsToDiscount(int id, [FromBody] IEnumerable<UpdateProductVariationDiscountDto> dto)
+    public async Task<IActionResult> AddProductVariationsToDiscount(int id, [FromBody] IEnumerable<UpdateProductVariationDiscountDto> dto)
     {
         try
         {
@@ -107,26 +110,26 @@ public class DiscountController : ControllerBase
             {
                 return BadRequest(ModelState);
             }
-
+            
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
                 return Unauthorized("User not found.");
             }
-
+            
             var userBusinessId = user.BusinessId;
-
+            
             var discount = await _discountRepository.GetByIdAsync(id);
             if (discount == null)
             {
                 return NotFound("Discount not found.");
             }
-
+            
             if (userBusinessId != discount.BusinessId)
             {
                 return StatusCode(StatusCodes.Status403Forbidden, "You do not have permission to update this discount.");
             }
-
+            
             List<int> variationIdsForAdding = dto
                 .Where(d => d.IsAdd)
                 .Select(d => d.ProductVariationId)
@@ -136,14 +139,14 @@ public class DiscountController : ControllerBase
                 .Where(d => !d.IsAdd)
                 .Select(d => d.ProductVariationId)
                 .ToList();
-
-
+            
+            
             var variationsForAdding =
                 await _variationRepository.GetByVariationIdsAndBusinessIdAsync(variationIdsForAdding, userBusinessId);
             
             var variationsForRemoving =
                 await _variationRepository.GetByVariationIdsAndBusinessIdAsync(variationIdsForRemoving, userBusinessId);
-
+            
             foreach (var variation in variationsForAdding)
             {
                 variation.DiscountId = discount.Id;
@@ -154,12 +157,12 @@ public class DiscountController : ControllerBase
                 variation.DiscountId = null;
             }
             
-
+            
             _variationRepository.BulkUpdate(variationsForAdding);
             _variationRepository.BulkUpdate(variationsForRemoving);
             await _variationRepository.SaveChangesAsync();
             
-            return Ok();
+            return Ok(variationsForAdding);
         }
         catch (Exception ex)
         {
