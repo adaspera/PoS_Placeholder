@@ -1,12 +1,17 @@
 import {Collapse, Nav, Navbar, NavbarBrand, NavbarToggler, NavItem, NavLink} from 'reactstrap';
 import {useState} from "react";
-import {Link} from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
 
-
-const NavMenu = () => {
+const NavMenu = ({ onLogout }) => {
 
     const [isCollapsed, setCollapsed] = useState(true);
+    const navigate = useNavigate();
 
+    const handleLogout = () => {
+        localStorage.removeItem("authToken");
+        onLogout();
+        navigate("/");
+    };
 
     return (
     <header>
@@ -22,8 +27,8 @@ const NavMenu = () => {
                         <div>Business</div>
                     </NavLink>
                     <NavLink tag={Link} to="/tax" className="text-dark d-flex flex-column align-items-center" style={{width: "80px"}}>
-                        <i className="bi-bank" style={{fontSize: '20px'}}/>
-                        <div>Tax</div>
+                        <i className="bi-percent" style={{fontSize: '20px'}}/>
+                        <div>Discount</div>
                     </NavLink>
                     <NavLink tag={Link} to="/products" className="text-dark d-flex flex-column align-items-center" style={{width: "80px"}}>
                         <i className="bi-box-seam" style={{fontSize: '20px'}}/>
@@ -35,10 +40,10 @@ const NavMenu = () => {
                     </NavLink>
                 </Nav>
                 <Nav className="ms-auto">
-                    <NavItem>
-                        <NavLink tag={Link} to="/login" className="text-dark">
-                            Login
-                        </NavLink>
+                    <NavItem
+                        className="text-dark" style={{cursor: "pointer"}}
+                        onClick={handleLogout}>
+                        Logout
                     </NavItem>
                 </Nav>
             </Collapse>

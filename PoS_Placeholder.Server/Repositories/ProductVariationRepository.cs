@@ -14,5 +14,12 @@ public class ProductVariationRepository : Repository<ProductVariation>
             .Where(pv => pv.ProductId == productId && pv.Product.BusinessId == userBusinessId)
             .ToListAsync();
     }
+    
+    public async Task<IEnumerable<ProductVariation>> GetByVariationIdsAndBusinessIdAsync(IEnumerable<int> variationIds, int userBusinessId)
+    {
+        return await _db.ProductVariations
+            .Where(pv => variationIds.Contains(pv.Id) && pv.Product.BusinessId == userBusinessId)
+            .ToListAsync();
+    }
 
 }

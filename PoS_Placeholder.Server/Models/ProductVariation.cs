@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace PoS_Placeholder.Server.Models;
 
@@ -26,4 +27,10 @@ public class ProductVariation
     
     [ForeignKey("ProductId")]
     public Product Product { get; set; }
+    
+    public int? DiscountId { get; set; }
+    
+    [DeleteBehavior(DeleteBehavior.NoAction)]
+    [ForeignKey("DiscountId")]
+    public Discount? Discount { get; set; }
 }

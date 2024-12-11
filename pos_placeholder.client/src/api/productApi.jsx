@@ -40,6 +40,14 @@ export const getProductVariations = async (productId) => {
     }
 };
 
+export const getAllProductVariations = async () => {
+    try {
+        return await apiService.get(`/api/productVariations`);
+    } catch (e) {
+        console.error("Error fetching productVariants:", e);
+    }
+};
+
 export const addProductVariation = async (productVariation) => {
     try {
         return await apiService.post("/api/productVariations", productVariation);

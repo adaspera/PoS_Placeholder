@@ -1,20 +1,31 @@
 import { Route, Routes } from 'react-router-dom';
 import AppRoutes from "@/AppRoutes.jsx";
 import Layout from './Layout';
-import {login} from "@/api/AuthService.jsx";
+import Login from "@/components/shared/Login.jsx";
+import {useState} from "react";
 
 function App() {
-    //temp bypass
-    login("owner@gmail.com","Owner123*")
+    const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem("authToken"));
+
+    const handleLogout = () => {
+        setIsAuthenticated(false);
+    };
+
     return (
-        <Layout>
-            <Routes>
-                {AppRoutes.map((route, index) => {
-                    const { element, ...rest } = route;
-                    return <Route key={index} {...rest} element={element} />;
-                })}
-            </Routes>
-        </Layout>
+        <>
+            {isAuthenticated ? (
+                <Layout onLogout={() => handleLogout()}>
+                    <Routes>
+                        {AppRoutes.map((route, index) => {
+                            const { element, ...rest } = route;
+                            return <Route key={index} {...rest} element={element} />;
+                        })}
+                    </Routes>
+                </Layout>
+            ) : (
+                <Login onLogin={() => setIsAuthenticated(true)} />
+            )}
+        </>
     );
 }
 
