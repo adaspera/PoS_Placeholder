@@ -13,6 +13,7 @@ export async function login(email, password) {
 
         const authToken = response.data.authToken;
         localStorage.setItem("authToken", authToken);
+        return response;
     } catch (error) {
         console.error("Login failed:", error.message);
     }
