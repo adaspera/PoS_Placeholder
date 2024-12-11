@@ -323,6 +323,35 @@ namespace PoS_Placeholder.Server.Migrations
                     b.ToTable("ProductVariations");
                 });
 
+            modelBuilder.Entity("PoS_Placeholder.Server.Models.TaxArchive", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsPercentage")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("TaxAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("TaxesArchive");
+                });
+
             modelBuilder.Entity("PoS_Placeholder.Server.Models.User", b =>
                 {
                     b.Property<string>("Id")
@@ -509,6 +538,17 @@ namespace PoS_Placeholder.Server.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("PoS_Placeholder.Server.Models.TaxArchive", b =>
+                {
+                    b.HasOne("PoS_Placeholder.Server.Models.Order", "Order")
+                        .WithMany("Taxes")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+                });
+
             modelBuilder.Entity("PoS_Placeholder.Server.Models.User", b =>
                 {
                     b.HasOne("PoS_Placeholder.Server.Models.Business", "Business")
@@ -532,6 +572,8 @@ namespace PoS_Placeholder.Server.Migrations
             modelBuilder.Entity("PoS_Placeholder.Server.Models.Order", b =>
                 {
                     b.Navigation("Products");
+
+                    b.Navigation("Taxes");
                 });
 
             modelBuilder.Entity("PoS_Placeholder.Server.Models.Product", b =>

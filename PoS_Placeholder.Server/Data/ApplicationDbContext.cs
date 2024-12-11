@@ -18,6 +18,7 @@ public class ApplicationDbContext : IdentityDbContext<User>
     public DbSet<ProductVariation> ProductVariations { get; set; }
     public DbSet<Order> Orders { get; set; }
     public DbSet<ProductArchive> ProductsArchive { get; set; }
+    public DbSet<TaxArchive> TaxesArchive { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
