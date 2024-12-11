@@ -154,6 +154,7 @@ public class OrderController : ControllerBase
 
         taxesTotal = Math.Round(taxesTotal, 2);
         var tip = createOrderDto.Tip ?? 0.00m;
+        tip = Math.Round(tip, 2);
         decimal total = subTotal + taxesTotal + tip;
 
         var orderPreviewDto = new OrderPreviewDto
