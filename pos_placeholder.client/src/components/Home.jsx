@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import {createOrder} from "@/api/orderApi.jsx";
 import * as productApi from "@/api/productApi.jsx";
+import {getCurrency} from "@/helpers/currencyUtils.jsx";
 
 const Home = () => {
     const [isLoading, setIsLoading] = useState(true);
@@ -78,7 +79,7 @@ const Home = () => {
                 <Col>{item.fullName}</Col>
                 <Col className="d-flex justify-content-center">x{item.quantity}</Col>
                 <Col className="d-flex justify-content-end">
-                    {item.price} €
+                    {item.price} {getCurrency()}
                     <i
                         className="bi-x-circle px-2"
                         style={{ cursor: "pointer" }}
@@ -130,7 +131,7 @@ const Home = () => {
                 {variations.map((variation) => (
                     <div key={variation.id} className="p-2 border rounded mb-2" onClick={() => handleAddToCart(variation)}>
                         <h6>{variation.name}</h6>
-                        <p>Price: {variation.price} €</p>
+                        <p>Price: {variation.price} {getCurrency()}</p>
                         <p>In Stock: {variation.inventoryQuantity}</p>
                         {variation.picture && <img src={variation.picture} alt={variation.name} width="50" />}
                     </div>
@@ -151,7 +152,7 @@ const Home = () => {
         <Row style={{ height: "85vh" }}>
             <Col className="border rounded shadow-sm m-2 p-1 d-flex flex-column" lg={4}>
                 <div className="justify-content-center border rounded p-2">
-                    Total: {totalPrice} €
+                    Total: {totalPrice} {getCurrency()}
                 </div>
                 <div>
                     {productsInCart}

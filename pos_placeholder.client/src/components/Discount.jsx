@@ -3,6 +3,7 @@ import {useEffect, useState} from "react";
 import * as discountApi from "@/api/discountApi.jsx";
 import * as ProductApi from "@/api/productApi.jsx";
 import {addProductVariationsToDiscount, getVariationsByDiscountId} from "@/api/discountApi.jsx";
+import {getCurrency} from "@/helpers/currencyUtils.jsx";
 
 
 const Discount = () => {
@@ -111,7 +112,7 @@ const Discount = () => {
                         <AccordionItem key={discount.id}>
                             <AccordionHeader targetId={discount.id.toString()}>
                                 <div className="d-flex justify-content-between w-100 me-3">
-                                    {discount.amount} {discount.isPercentage ? '%' : '$'} discount &#32;
+                                    {discount.amount} {discount.isPercentage ? '%' : getCurrency()} discount &#32;
                                     {new Date(discount.startDate).toLocaleDateString()} to {new Date(discount.endDate).toLocaleDateString()}
                                     <Button
                                         color="danger"
@@ -140,7 +141,7 @@ const Discount = () => {
                                                 />
                                             </Col>
                                             <Col>
-                                                <span>{variation.name} - ${variation.price} | Stock: {variation.inventoryQuantity}</span>
+                                                <span>{variation.name} - {getCurrency()}{variation.price} | Stock: {variation.inventoryQuantity}</span>
                                             </Col>
                                             <Col xs="auto">
                                                 <Button color="danger" onClick={() => removeVariationFromDiscount(variation.id)}>
@@ -162,7 +163,7 @@ const Discount = () => {
                                                 />
                                             </Col>
                                             <Col>
-                                                <span>{variation.name} - ${variation.price} | Stock: {variation.inventoryQuantity}</span>
+                                                <span>{variation.name} - {getCurrency()}{variation.price} | Stock: {variation.inventoryQuantity}</span>
                                             </Col>
                                             <Col xs="auto">
                                                 <Button color="danger" onClick={() => addVariationToDiscount(variation.id)}>

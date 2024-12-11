@@ -12,7 +12,11 @@ export async function login(email, password) {
         console.log("Login successful:", response);
 
         const authToken = response.data.authToken;
+        const currency = response.data.currency;
+
         localStorage.setItem("authToken", authToken);
+        localStorage.setItem("currency", currency);
+
         return response;
     } catch (error) {
         console.error("Login failed:", error.message);

@@ -3,6 +3,20 @@ import {login, registerBusiness} from "@/api/AuthService.jsx";
 import {Alert, Button, Col, Container, Form, FormGroup, Input, Label, Row} from "reactstrap";
 
 //"owner@gmail.com","Owner123*"
+// const [registerCredentials, setRegisterCredentials] = useState({
+//     businessName: "Abzora",
+//     businessPhone: "+37055555555",
+//     businessEmail: "testingg@gmail.com",
+//     businessStreet: "address 1",
+//     businessCity: "Kaunas",
+//     businessRegion: "EUR",
+//     businessCountry: "Lithuania",
+//     firstName: "Zmogus",
+//     lastName: "Voras",
+//     phoneNumber: "+37055555555",
+//     email: "testingg@gmail.com",
+//     password: "Slaptazodis1*",
+// });
 const Login = ({ onLogin }) => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -23,20 +37,7 @@ const Login = ({ onLogin }) => {
         email: "",
         password: "",
     });
-    // const [registerCredentials, setRegisterCredentials] = useState({
-    //     businessName: "Abzora",
-    //     businessPhone: "+37055555555",
-    //     businessEmail: "testingg@gmail.com",
-    //     businessStreet: "address 1",
-    //     businessCity: "Kaunas",
-    //     businessRegion: "EUR",
-    //     businessCountry: "Lithuania",
-    //     firstName: "Zmogus",
-    //     lastName: "Voras",
-    //     phoneNumber: "+37055555555",
-    //     email: "testingg@gmail.com",
-    //     password: "Slaptazodis1*",
-    // });
+
     const [isWindowLogin, setIsWindowLogin] = useState(true);
 
     const handleRegisterInputChange = (e) => {
@@ -62,6 +63,7 @@ const Login = ({ onLogin }) => {
             }
         } catch (err) {
             setError("Login failed. Please check your credentials.");
+            console.log(err);
         }
     };
 
@@ -80,6 +82,7 @@ const Login = ({ onLogin }) => {
             }
         } catch (err) {
             setError("Register failed. Please check your credentials.");
+            console.log(err);
         }
     }
 
