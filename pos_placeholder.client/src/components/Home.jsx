@@ -1,19 +1,23 @@
-﻿import {Button, Col, Modal, ModalBody, ModalFooter, Row} from "reactstrap";
+﻿import {Button, Col, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader, Row} from "reactstrap";
 import {useEffect, useState} from "react";
 import * as productApi from "@/api/productApi.jsx";
 import * as orderApi from "@/api/orderApi.jsx";
 
 const Home = () => {
     const [isLoading, setIsLoading] = useState(true);
+    
+    const [tip, setTip] = useState('');
+    const [orderPreview, setOrderPreview] = useState([]);
+    const [order, setOrder] = useState({products: []});
 
     const [totalPrice, setTotalPrice] = useState("0");
-    const [order, setOrder] = useState({products: []});
     const [products, setProducts] = useState(null);
+    const [variations, setVariations] = useState([]);
     const [productsInCart, setProductsInCart] = useState(null);
     const [productsInCatalogue, setProductsInCatalogue] = useState(null);
-
+    
     const [selectedProduct, setSelectedProduct] = useState(null);
-    const [variations, setVariations] = useState([]);
+    const [paySelected, setPaySelected] = useState(false);
 
     const fetchProducts = async () => {
         try {
@@ -46,11 +50,6 @@ const Home = () => {
         const total = order.products.reduce((acc, item) => acc + item.price * item.quantity, 0);
         setTotalPrice(total.toFixed(2));
     }, [order]);
-
-    const handleProductClick = async (product) => {
-        setSelectedProduct(product);
-        await fetchProductVariations(product.id);
-    };
 
     const handleAddToCart = (variation, product) => {
         const newProductInCart = {
@@ -99,17 +98,43 @@ const Home = () => {
         setOrder((prevOrder) => ({...prevOrder, products: updatedProducts}));
     };
 
-    const handlePayNow = async() => {
+    const handlePayNowClick = async () => {
+        if (order.products.length === 0) {
+            alert("Your cart is empty. Please add items before paying.");
+            return;
+        }
+
         const createOrderDto = {
-            Tip: null,
-            OrderItems: order.products.map((item) => ({
+            Tip: tip ? Number(tip) : null,
+            OrderItems: order.products.map(item => ({
                 ProductVariationId: item.productVariationId,
                 Quantity: item.quantity
             }))
-        }
+        };
+
+        const orderPreviewResponse = await orderApi.getOrderPreview(createOrderDto);
+        setOrderPreview(orderPreviewResponse);
+        setPaySelected(true);
+    };
+    
+    const handlePayment = async() => {
+        const createOrderDto = {
+            Tip: tip ? Number(tip) : null,
+            OrderItems: order.products.map(item => ({
+                ProductVariationId: item.productVariationId,
+                Quantity: item.quantity
+            }))
+        };
+        
         setOrder({products: []});
         const createdOrder = await orderApi.createOrder(createOrderDto);
+        console.log(createdOrder);
     }
+
+    const handleProductClick = async (product) => {
+        setSelectedProduct(product);
+        await fetchProductVariations(product.id);
+    };
 
     const formatProductsInCart = () => {
         const formatedProductsInCart = order.products.map((item, index) => (
@@ -187,6 +212,45 @@ const Home = () => {
         return <div>Loading...</div>;
     }
 
+    const paymentModal =
+        <Modal isOpen={paySelected} fade={false} size="lg" centered={true}>
+            <ModalHeader>
+                Checkout
+            </ModalHeader>
+            <ModalBody>
+                <div>
+                    <div className="d-flex justify-content-between">
+                        <span>Subtotal:</span>
+                        <span>{orderPreview.subTotal} €</span>
+                    </div>
+                    <div className="d-flex justify-content-between">
+                        <span>Taxes:</span>
+                        <span>{orderPreview.taxesTotal} €</span>
+                    </div>
+                    <div className="d-flex justify-content-between">
+                        <span>Tip:</span>
+                        <span>{orderPreview.tip} €</span>
+                    </div>
+                    <hr/>
+                    <div className="d-flex justify-content-between fw-bold">
+                        <span>Total:</span>
+                        <span>{orderPreview.total} €</span>
+                    </div>
+                </div>
+                <div>
+                    Card payment fields from stripe
+                </div>
+            </ModalBody>
+            <ModalFooter>
+                <Button color="danger" className="w-25" onClick={() => setPaySelected(false)}>
+                    Cancel
+                </Button>
+                <Button color="success" className="w-25" onClick={handlePayment}>
+                    Pay
+                </Button>
+            </ModalFooter>
+        </Modal>
+
     return (
         <Row style={{height: "85vh"}}>
             <Col className="border rounded shadow-sm m-2 p-1 d-flex flex-column" lg={4}>
@@ -196,10 +260,19 @@ const Home = () => {
                 <div>
                     {productsInCart}
                 </div>
-                <div className="d-flex justify-content-center m-2 mt-auto">
-                    <Button color="dark" outline className="m-1">Split order</Button>
-                    <Button color="dark" outline className="m-1">Pay later</Button>
-                    <Button color="success" className="m-1" onClick={handlePayNow}>Pay now</Button>
+                <div className="d-flex justify-content-center m-2 mt-auto align-items-center">
+                    <div className="d-flex justify-content-start col-xl-6 col-lg-4">
+                        <Label className="w-25 d-flex flex-column justify-content-center p-0 m-0">Tip:</Label>
+                        <Input placeholder="Enter tip value"
+                               value={tip}
+                               type={"number"}
+                               onChange={(e) => setTip(e.target.value)}>
+                        </Input>
+                    </div>
+                    <div className="d-flex justify-content-center col-auto">
+                        <Button color="dark" outline className="m-1">Split order</Button>
+                        <Button color="success" className="m-1" onClick={handlePayNowClick}>Pay now</Button>
+                    </div>
                 </div>
             </Col>
             <Col className="border rounded shadow-sm m-2 p-2">
@@ -207,6 +280,7 @@ const Home = () => {
             </Col>
 
             {modal}
+            {paymentModal}
         </Row>
     );
 };

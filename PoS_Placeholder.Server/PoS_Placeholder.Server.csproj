@@ -35,6 +35,12 @@
 
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="locale.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 
 
 

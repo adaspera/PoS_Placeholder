@@ -7,6 +7,7 @@ using PoS_Placeholder.Server.Models;
 using PoS_Placeholder.Server.Models.Dto;
 using PoS_Placeholder.Server.Models.Enum;
 using PoS_Placeholder.Server.Repositories;
+using PoS_Placeholder.Server.Services;
 
 
 namespace PoS_Placeholder.Server.Controllers;
@@ -16,13 +17,16 @@ namespace PoS_Placeholder.Server.Controllers;
 public class OrderController : ControllerBase
 {
     private readonly UserManager<User> _userManager;
-    private readonly ApplicationDbContext _db;
     private readonly OrderRepository _orderRepository;
+    private readonly ITaxService _taxService;
+    private readonly ApplicationDbContext _db;
 
-    public OrderController(UserManager<User> userManager, OrderRepository orderRepository, ApplicationDbContext db)
+    public OrderController(UserManager<User> userManager, OrderRepository orderRepository, ITaxService taxService,
+        ApplicationDbContext db)
     {
         _userManager = userManager;
         _orderRepository = orderRepository;
+        _taxService = taxService;
         _db = db;
     }
 
@@ -34,13 +38,15 @@ public class OrderController : ControllerBase
         if (user == null)
             return Unauthorized("User not found.");
 
-        var businessOrders = await _orderRepository.GetOrdersByBusinessIdAsync(user.BusinessId);
-        if (businessOrders == null)
+        var orders = await _orderRepository.GetOrdersByBusinessIdAsync(user.BusinessId);
+        if (orders == null)
             return NotFound("Orders not found.");
 
-        var orderResponseDtos = businessOrders.Select(order =>
+        var orderResponseDtos = orders.Select(order =>
         {
-            var totalPrice = order.Products.Sum(p => p.Price * p.Quantity);
+            var totalPrice = order.Products.Sum(p => p.Price * p.Quantity)
+                             + order.Taxes.Sum(t => t.TaxAmount)
+                             + (order.Tip ?? 0m);
             return new OrderResponseDto
             {
                 Id = order.Id,
@@ -68,20 +74,22 @@ public class OrderController : ControllerBase
         if (user == null)
             return Unauthorized("User not found.");
 
-        var businessOrder = await _orderRepository.GetOrderByOrderIdAndBusinessIdAsync(id, user.BusinessId);
-        if (businessOrder == null)
+        var order = await _orderRepository.GetOrderByOrderIdAndBusinessIdAsync(id, user.BusinessId);
+        if (order == null)
             return NotFound("Order not found.");
 
-        var totalPrice = businessOrder.Products.Sum(p => p.Price * p.Quantity);
+        var totalPrice = order.Products.Sum(p => p.Price * p.Quantity)
+                         + order.Taxes.Sum(t => t.TaxAmount)
+                         + (order.Tip ?? 0m);
 
         var orderResponseDto = new OrderResponseDto
         {
-            Id = businessOrder.Id,
-            Tip = businessOrder.Tip,
-            Date = businessOrder.Date,
-            Status = businessOrder.Status.ToString(),
+            Id = order.Id,
+            Tip = order.Tip,
+            Date = order.Date,
+            Status = order.Status.ToString(),
             TotalPrice = totalPrice,
-            Products = businessOrder.Products.Select(pa => new OrderProductDto
+            Products = order.Products.Select(pa => new OrderProductDto
             {
                 FullName = pa.FullName,
                 Price = pa.Price,
@@ -90,6 +98,79 @@ public class OrderController : ControllerBase
         };
 
         return Ok(orderResponseDto);
+    }
+
+    [HttpPost("preview")]
+    [Authorize]
+    public async Task<IActionResult> GetOrderPaymentPreview([FromBody] CreateOrderDto createOrderDto)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null)
+            return Unauthorized("User not found.");
+
+        var taxes = _taxService.GetTaxesByCountry("LIT");
+        if (taxes == null)
+            return NotFound("No Taxes found for LIT.");
+
+        decimal subTotal = 0m;
+
+        foreach (var orderItem in createOrderDto.OrderItems)
+        {
+            var productVariation = await _db.ProductVariations
+                .Include(pv => pv.Product)
+                .FirstOrDefaultAsync(pv => pv.Id == orderItem.ProductVariationId);
+
+            if (productVariation == null)
+                return BadRequest($"Product variation with Id {orderItem.ProductVariationId} not found.");
+
+            subTotal += productVariation.Price * orderItem.Quantity;
+        }
+
+        subTotal = Math.Round(subTotal, 2);
+        decimal taxesTotal = 0m;
+        var taxDtos = new List<TaxDto>();
+
+        foreach (var tax in taxes)
+        {
+            decimal taxValue;
+            if (tax.IsPercentage)
+            {
+                taxValue = subTotal * (tax.TaxAmount / 100m);
+            }
+            else
+            {
+                taxValue = tax.TaxAmount;
+            }
+
+            taxesTotal += taxValue;
+            taxDtos.Add(new TaxDto
+            {
+                Name = tax.NameOfTax,
+                Amount = Math.Round(taxValue, 2),
+                IsPercentage = tax.IsPercentage
+            });
+        }
+
+        taxesTotal = Math.Round(taxesTotal, 2);
+        var tip = createOrderDto.Tip ?? 0.00m;
+        tip = Math.Round(tip, 2);
+        decimal total = subTotal + taxesTotal + tip;
+
+        var orderPreviewDto = new OrderPreviewDto
+        {
+            Tip = tip,
+            SubTotal = subTotal,
+            TaxesTotal = taxesTotal,
+            Total = total,
+            Taxes = taxDtos
+        };
+
+        return Ok(orderPreviewDto);
     }
 
     [HttpPost]
@@ -105,13 +186,18 @@ public class OrderController : ControllerBase
         if (user == null)
             return Unauthorized("User not found.");
 
+        var taxes = _taxService.GetTaxesByCountry("LIT");
+        if (taxes == null)
+            return NotFound("No Taxes found for LIT.");
+        
         using (var transaction = await _db.Database.BeginTransactionAsync())
         {
             try
             {
+                var tip = Math.Round(createOrderDto.Tip ?? 0.00m, 2);
                 var order = new Order
                 {
-                    Tip = createOrderDto.Tip ?? 0.00m,
+                    Tip = tip,
                     Date = DateTime.Now,
                     Status = OrderStatus.Closed,
                     UserId = user.Id,
@@ -121,11 +207,11 @@ public class OrderController : ControllerBase
                 _orderRepository.Add(order);
                 await _orderRepository.SaveChangesAsync();
 
-                foreach (var item in createOrderDto.OrderItems)
+                foreach (var orderItem in createOrderDto.OrderItems)
                 {
                     var productVariation = await _db.ProductVariations
                         .Include(pv => pv.Product)
-                        .FirstOrDefaultAsync(pv => pv.Id == item.ProductVariationId);
+                        .FirstOrDefaultAsync(pv => pv.Id == orderItem.ProductVariationId);
 
                     if (productVariation == null)
                     {
@@ -140,26 +226,46 @@ public class OrderController : ControllerBase
                     {
                         FullName = fullName,
                         Price = price,
-                        Quantity = item.Quantity,
+                        Quantity = orderItem.Quantity,
                         OrderId = order.Id,
                     };
 
                     _db.ProductsArchive.Add(productArchive);
                 }
+                // for saving the productArchive items, so we can get them instantly afterwards
+                await _db.SaveChangesAsync();
+                
+                var productArchives = await _db.ProductsArchive.Where(pa => pa.OrderId == order.Id).ToListAsync();
+                var subtotal = productArchives.Sum(pa => pa.Price * pa.Quantity);
+                
+                var taxesTotal = 0m;
 
+                foreach (var tax in taxes)
+                {
+                    var taxAmount = tax.IsPercentage ? subtotal * (tax.TaxAmount / 100m) : tax.TaxAmount;
+                    taxAmount = Math.Round(taxAmount, 2);
+                    taxesTotal += taxAmount;
+                    var taxArchiveEntry = new TaxArchive
+                    {
+                        Name = tax.NameOfTax,
+                        TaxAmount = taxAmount,
+                        IsPercentage = tax.IsPercentage,
+                        OrderId = order.Id,
+                    };
+
+                    _db.TaxesArchive.Add(taxArchiveEntry);
+                }
+                // final tax changes saved and transaction commited, everything saved successfully after this point
                 await _db.SaveChangesAsync();
                 await transaction.CommitAsync();
-
-                var productArchives = await _db.ProductsArchive.Where(pa => pa.OrderId == order.Id).ToListAsync();
-                var totalPrice = productArchives.Sum(pa => pa.Price * pa.Quantity);
 
                 var orderResponseDto = new OrderResponseDto
                 {
                     Id = order.Id,
-                    Tip = order.Tip,
+                    Tip = tip,
                     Date = order.Date,
                     Status = order.Status.ToString(),
-                    TotalPrice = totalPrice,
+                    TotalPrice = subtotal + taxesTotal + tip,
                     Products = productArchives.Select(pa => new OrderProductDto
                     {
                         FullName = pa.FullName,
