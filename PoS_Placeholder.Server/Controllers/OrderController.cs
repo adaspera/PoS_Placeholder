@@ -198,6 +198,7 @@ public class OrderController : ControllerBase
                 var order = new Order
                 {
                     Tip = tip,
+                    PaymentIntentId = createOrderDto.PaymentIntentId,
                     Date = DateTime.Now,
                     Status = OrderStatus.Closed,
                     UserId = user.Id,

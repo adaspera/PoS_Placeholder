@@ -11,6 +11,8 @@ public class Order
     
     [Column(TypeName = "decimal(18,2)")]
     public decimal? Tip { get; set; }
+    
+    public string? PaymentIntentId { get; set; }
 
     [Required]
     public DateTime Date { get; set; }
