@@ -2,21 +2,24 @@
 import {useEffect, useState} from "react";
 import * as productApi from "@/api/productApi.jsx";
 import * as orderApi from "@/api/orderApi.jsx";
+import * as paymentApi from "@/api/paymentApi.jsx";
 import {getCurrency} from "@/helpers/currencyUtils.jsx";
+import Payment from "@/components/payment/payment.jsx";
 
 const Home = () => {
     const [isLoading, setIsLoading] = useState(true);
-    
+
     const [tip, setTip] = useState('');
     const [orderPreview, setOrderPreview] = useState([]);
     const [order, setOrder] = useState({products: []});
+    const [paymentData, setPaymentData] = useState({});
 
     const [totalPrice, setTotalPrice] = useState("0");
     const [products, setProducts] = useState(null);
     const [variations, setVariations] = useState([]);
     const [productsInCart, setProductsInCart] = useState(null);
     const [productsInCatalogue, setProductsInCatalogue] = useState(null);
-    
+
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [paySelected, setPaySelected] = useState(false);
 
@@ -99,6 +102,11 @@ const Home = () => {
         setOrder((prevOrder) => ({...prevOrder, products: updatedProducts}));
     };
 
+    const onPaymentSuccess = () => {
+        setPaySelected(false);
+        setOrder({products: []});
+    };
+
     const handlePayNowClick = async () => {
         if (order.products.length === 0) {
             alert("Your cart is empty. Please add items before paying.");
@@ -110,27 +118,21 @@ const Home = () => {
             OrderItems: order.products.map(item => ({
                 ProductVariationId: item.productVariationId,
                 Quantity: item.quantity
-            }))
+            })),
+            PaymentIntentId: null
         };
 
         const orderPreviewResponse = await orderApi.getOrderPreview(createOrderDto);
         setOrderPreview(orderPreviewResponse);
+
+        const paymentRequestDto = {
+            TotalAmount: orderPreviewResponse.total
+        }
+        const paymentResponse = await paymentApi.makePayment(paymentRequestDto);
+        setPaymentData(paymentResponse);
+
         setPaySelected(true);
     };
-    
-    const handlePayment = async() => {
-        const createOrderDto = {
-            Tip: tip ? Number(tip) : null,
-            OrderItems: order.products.map(item => ({
-                ProductVariationId: item.productVariationId,
-                Quantity: item.quantity
-            }))
-        };
-        
-        setOrder({products: []});
-        const createdOrder = await orderApi.createOrder(createOrderDto);
-        console.log(createdOrder);
-    }
 
     const handleProductClick = async (product) => {
         setSelectedProduct(product);
@@ -239,15 +241,12 @@ const Home = () => {
                     </div>
                 </div>
                 <div>
-                    Card payment fields from stripe
+                    <Payment paymentData={paymentData} order={order} tip={tip} onPaymentSuccess={onPaymentSuccess}/>
                 </div>
             </ModalBody>
             <ModalFooter>
                 <Button color="danger" className="w-25" onClick={() => setPaySelected(false)}>
                     Cancel
-                </Button>
-                <Button color="success" className="w-25" onClick={handlePayment}>
-                    Pay
                 </Button>
             </ModalFooter>
         </Modal>
