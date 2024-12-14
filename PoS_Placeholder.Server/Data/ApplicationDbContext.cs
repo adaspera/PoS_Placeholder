@@ -20,6 +20,7 @@ public class ApplicationDbContext : IdentityDbContext<User>
     public DbSet<ProductArchive> ProductsArchive { get; set; }
     public DbSet<TaxArchive> TaxesArchive { get; set; }
     public DbSet<Discount> Discounts { get; set; }
+    public DbSet<UserWorkTime> UserWorkTimes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

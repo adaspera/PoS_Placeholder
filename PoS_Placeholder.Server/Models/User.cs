@@ -26,4 +26,7 @@ public class User : IdentityUser
     
     // Navigation Properties
     public ICollection<Order> Orders { get; set; }
+
+    public virtual ICollection<UserWorkTime> UserWorkTimes { get; set; }
+
 }
