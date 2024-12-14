@@ -2,7 +2,6 @@ import {Accordion, AccordionBody, AccordionHeader, AccordionItem, Button, Col, I
 import {useEffect, useState} from "react";
 import * as discountApi from "@/api/discountApi.jsx";
 import * as ProductApi from "@/api/productApi.jsx";
-import {addProductVariationsToDiscount, getVariationsByDiscountId} from "@/api/discountApi.jsx";
 import {getCurrency} from "@/helpers/currencyUtils.jsx";
 
 
