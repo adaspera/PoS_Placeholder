@@ -233,6 +233,53 @@ namespace PoS_Placeholder.Server.Migrations
                     b.ToTable("Discounts");
                 });
 
+            modelBuilder.Entity("PoS_Placeholder.Server.Models.DiscountArchive", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<bool>("IsPercentage")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ProductFullName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("DiscountsArchives");
+                });
+
+            modelBuilder.Entity("PoS_Placeholder.Server.Models.Giftcard", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<decimal>("Balance")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("BusinessId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BusinessId");
+
+                    b.ToTable("Giftcards");
+                });
+
             modelBuilder.Entity("PoS_Placeholder.Server.Models.Order", b =>
                 {
                     b.Property<int>("Id")
@@ -268,35 +315,36 @@ namespace PoS_Placeholder.Server.Migrations
 
                     b.ToTable("Orders");
                 });
-            
-            modelBuilder.Entity("PoS_Placeholder.Server.Models.DiscountArchive", b =>
-            {
-                b.Property<int>("Id")
-                    .ValueGeneratedOnAdd()
-                    .HasColumnType("int");
 
-                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+            modelBuilder.Entity("PoS_Placeholder.Server.Models.PaymentArchive", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
 
-                b.Property<decimal>("Amount")
-                    .HasColumnType("decimal(18,2)");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                b.Property<bool>("IsPercentage")
-                    .HasColumnType("bit");
+                    b.Property<string>("GiftCardId")
+                        .HasColumnType("nvarchar(max)");
 
-                b.Property<int>("OrderId")
-                    .HasColumnType("int");
+                    b.Property<int>("Method")
+                        .HasColumnType("int");
 
-                b.Property<string>("ProductFullName")
-                    .IsRequired()
-                    .HasMaxLength(255)
-                    .HasColumnType("nvarchar(255)");
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
 
-                b.HasKey("Id");
+                    b.Property<decimal>("PaidPrice")
+                        .HasColumnType("decimal(18,2)");
 
-                b.HasIndex("OrderId");
+                    b.Property<string>("PaymentIntentId")
+                        .HasColumnType("nvarchar(max)");
 
-                b.ToTable("DiscountsArchives");
-            });
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("PaymentsArchive");
+                });
 
             modelBuilder.Entity("PoS_Placeholder.Server.Models.Product", b =>
                 {
@@ -567,12 +615,23 @@ namespace PoS_Placeholder.Server.Migrations
             modelBuilder.Entity("PoS_Placeholder.Server.Models.DiscountArchive", b =>
                 {
                     b.HasOne("PoS_Placeholder.Server.Models.Order", "Order")
-                        .WithMany()
+                        .WithMany("Discounts")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Order");
+                });
+
+            modelBuilder.Entity("PoS_Placeholder.Server.Models.Giftcard", b =>
+                {
+                    b.HasOne("PoS_Placeholder.Server.Models.Business", "Business")
+                        .WithMany("Giftcards")
+                        .HasForeignKey("BusinessId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Business");
                 });
 
             modelBuilder.Entity("PoS_Placeholder.Server.Models.Order", b =>
@@ -592,6 +651,17 @@ namespace PoS_Placeholder.Server.Migrations
                     b.Navigation("Business");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("PoS_Placeholder.Server.Models.PaymentArchive", b =>
+                {
+                    b.HasOne("PoS_Placeholder.Server.Models.Order", "Order")
+                        .WithMany("Payments")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Order");
                 });
 
             modelBuilder.Entity("PoS_Placeholder.Server.Models.Product", b =>
@@ -658,6 +728,8 @@ namespace PoS_Placeholder.Server.Migrations
 
             modelBuilder.Entity("PoS_Placeholder.Server.Models.Business", b =>
                 {
+                    b.Navigation("Giftcards");
+
                     b.Navigation("Orders");
 
                     b.Navigation("Products");
@@ -667,6 +739,10 @@ namespace PoS_Placeholder.Server.Migrations
 
             modelBuilder.Entity("PoS_Placeholder.Server.Models.Order", b =>
                 {
+                    b.Navigation("Discounts");
+
+                    b.Navigation("Payments");
+
                     b.Navigation("Products");
 
                     b.Navigation("Taxes");

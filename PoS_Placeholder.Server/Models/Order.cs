@@ -36,4 +36,5 @@ public class Order
     public ICollection<ProductArchive> Products { get; set; }
     public ICollection<TaxArchive> Taxes { get; set; }
     public ICollection<DiscountArchive> Discounts { get; set; }
+    public ICollection<PaymentArchive> Payments { get; set; }
 }

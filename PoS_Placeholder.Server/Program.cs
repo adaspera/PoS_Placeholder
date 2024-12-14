@@ -39,6 +39,7 @@ builder.Services.AddScoped<ProductRepository>();
 builder.Services.AddScoped<ProductVariationRepository>();
 builder.Services.AddScoped<OrderRepository>();
 builder.Services.AddScoped<DiscountRepository>();
+builder.Services.AddScoped<GiftcardRepository>();
 
 builder.Logging.AddLogger(configuration =>
 {
