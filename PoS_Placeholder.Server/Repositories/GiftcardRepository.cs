@@ -14,4 +14,6 @@ public class GiftcardRepository : Repository<Giftcard>
     {
         return await _db.Giftcards.FirstOrDefaultAsync(g => g.Id == giftcardId && g.BusinessId == businessId);
     }
+    
+    
 }
