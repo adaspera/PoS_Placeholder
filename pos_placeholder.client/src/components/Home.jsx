@@ -5,6 +5,7 @@ import * as orderApi from "@/api/orderApi.jsx";
 import * as paymentApi from "@/api/paymentApi.jsx";
 import {getCurrency} from "@/helpers/currencyUtils.jsx";
 import Payment from "@/components/payment/payment.jsx";
+import * as discountApi from "@/api/discountApi.jsx";
 
 const Home = () => {
     const [isLoading, setIsLoading] = useState(true);
@@ -55,12 +56,24 @@ const Home = () => {
         setTotalPrice(total.toFixed(2));
     }, [order]);
 
-    const handleAddToCart = (variation, product) => {
+    const handleAddToCart = async (variation, product) => {
+        let discountedPrice = null;
+        let isDiscountPercentage = null;
+        if (variation.discountId) {
+            const discount = await discountApi.getDiscount(variation.discountId);
+            if (discount) {
+                isDiscountPercentage = discount.isPercentage;
+                discountedPrice = discount.isPercentage ? variation.price - variation.price * discount.amount / 100 : discount.amount;
+                discountedPrice = discountedPrice.toFixed(2);
+            }
+        }
         const newProductInCart = {
             productVariationId: variation.id,
             fullName: product.name + " " + variation.name,
             price: variation.price,
             quantity: 1,
+            discount: discountedPrice,
+            isDiscountPercentage: isDiscountPercentage
         };
 
         const existingProductIndex = order.products.findIndex(item => item.productVariationId === variation.id);
@@ -145,7 +158,19 @@ const Home = () => {
                 <Col>{item.fullName}</Col>
                 <Col className="d-flex justify-content-center">x{item.quantity}</Col>
                 <Col className="d-flex justify-content-end">
-                    {item.price} {getCurrency()}
+                    {item.isDiscountPercentage ? (
+                        <>
+                            <span style={{ textDecoration: "line-through" }}>
+                                {item.price} {getCurrency()}
+                            </span>
+                            &nbsp;
+                            {item.discount} {getCurrency()}
+                        </>
+                    ) : (
+                        <>
+                            {item.price} -{item.discount} {getCurrency()}
+                        </>
+                    )}
                     <i
                         className="bi-x-circle px-2"
                         style={{cursor: "pointer"}}
@@ -229,6 +254,10 @@ const Home = () => {
                     <div className="d-flex justify-content-between">
                         <span>Taxes:</span>
                         <span>{orderPreview.taxesTotal} €</span>
+                    </div>
+                    <div className="d-flex justify-content-between">
+                        <span>Discounts:</span>
+                        <span>{orderPreview.discountsTotal} €</span>
                     </div>
                     <div className="d-flex justify-content-between">
                         <span>Tip:</span>

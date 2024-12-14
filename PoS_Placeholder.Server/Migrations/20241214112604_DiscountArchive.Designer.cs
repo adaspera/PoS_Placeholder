@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PoS_Placeholder.Server.Data;
 
@@ -11,9 +12,11 @@ using PoS_Placeholder.Server.Data;
 namespace PoS_Placeholder.Server.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241214112604_DiscountArchive")]
+    partial class DiscountArchive
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -233,6 +236,35 @@ namespace PoS_Placeholder.Server.Migrations
                     b.ToTable("Discounts");
                 });
 
+            modelBuilder.Entity("PoS_Placeholder.Server.Models.DiscountArchive", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<bool>("IsPercentage")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ProductFullName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("DiscountsArchives");
+                });
+
             modelBuilder.Entity("PoS_Placeholder.Server.Models.Order", b =>
                 {
                     b.Property<int>("Id")
@@ -246,9 +278,6 @@ namespace PoS_Placeholder.Server.Migrations
 
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("PaymentIntentId")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -268,35 +297,6 @@ namespace PoS_Placeholder.Server.Migrations
 
                     b.ToTable("Orders");
                 });
-            
-            modelBuilder.Entity("PoS_Placeholder.Server.Models.DiscountArchive", b =>
-            {
-                b.Property<int>("Id")
-                    .ValueGeneratedOnAdd()
-                    .HasColumnType("int");
-
-                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                b.Property<decimal>("Amount")
-                    .HasColumnType("decimal(18,2)");
-
-                b.Property<bool>("IsPercentage")
-                    .HasColumnType("bit");
-
-                b.Property<int>("OrderId")
-                    .HasColumnType("int");
-
-                b.Property<string>("ProductFullName")
-                    .IsRequired()
-                    .HasMaxLength(255)
-                    .HasColumnType("nvarchar(255)");
-
-                b.HasKey("Id");
-
-                b.HasIndex("OrderId");
-
-                b.ToTable("DiscountsArchives");
-            });
 
             modelBuilder.Entity("PoS_Placeholder.Server.Models.Product", b =>
                 {

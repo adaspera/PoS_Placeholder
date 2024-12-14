@@ -18,14 +18,16 @@ public class OrderController : ControllerBase
 {
     private readonly UserManager<User> _userManager;
     private readonly OrderRepository _orderRepository;
+    private readonly DiscountRepository _discountRepository;
     private readonly ITaxService _taxService;
     private readonly ApplicationDbContext _db;
 
     public OrderController(UserManager<User> userManager, OrderRepository orderRepository, ITaxService taxService,
-        ApplicationDbContext db)
+        ApplicationDbContext db, DiscountRepository discountRepository)
     {
         _userManager = userManager;
         _orderRepository = orderRepository;
+        _discountRepository = discountRepository;
         _taxService = taxService;
         _db = db;
     }
@@ -118,16 +120,26 @@ public class OrderController : ControllerBase
             return NotFound("No Taxes found for LIT.");
 
         decimal subTotal = 0m;
+        decimal discountsTotal = 0m;
 
         foreach (var orderItem in createOrderDto.OrderItems)
         {
             var productVariation = await _db.ProductVariations
                 .Include(pv => pv.Product)
+                .Include(pv => pv.Discount)
                 .FirstOrDefaultAsync(pv => pv.Id == orderItem.ProductVariationId);
 
             if (productVariation == null)
                 return BadRequest($"Product variation with Id {orderItem.ProductVariationId} not found.");
 
+            var discount = productVariation.Discount;
+            if (discount != null)
+            {
+                discountsTotal += discount.IsPercentage
+                    ? productVariation.Price * discount.Amount / 100
+                    : discount.Amount;
+            }
+            
             subTotal += productVariation.Price * orderItem.Quantity;
         }
 
@@ -157,15 +169,17 @@ public class OrderController : ControllerBase
         }
 
         taxesTotal = Math.Round(taxesTotal, 2);
+        discountsTotal = Math.Round(discountsTotal, 2);
         var tip = createOrderDto.Tip ?? 0.00m;
         tip = Math.Round(tip, 2);
-        decimal total = subTotal + taxesTotal + tip;
+        decimal total = subTotal + taxesTotal + tip - discountsTotal;
 
         var orderPreviewDto = new OrderPreviewDto
         {
             Tip = tip,
             SubTotal = subTotal,
             TaxesTotal = taxesTotal,
+            DiscountsTotal = discountsTotal,
             Total = total,
             Taxes = taxDtos
         };
@@ -212,6 +226,7 @@ public class OrderController : ControllerBase
                 {
                     var productVariation = await _db.ProductVariations
                         .Include(pv => pv.Product)
+                        .Include(pv => pv.Discount)
                         .FirstOrDefaultAsync(pv => pv.Id == orderItem.ProductVariationId);
 
                     if (productVariation == null)
@@ -230,8 +245,21 @@ public class OrderController : ControllerBase
                         Quantity = orderItem.Quantity,
                         OrderId = order.Id,
                     };
-
+                    
                     _db.ProductsArchive.Add(productArchive);
+                    
+                    if (productVariation.Discount != null)
+                    {
+                        var discountArchive = new DiscountArchive()
+                        {
+                            Amount = productVariation.Discount.Amount,
+                            IsPercentage = productVariation.Discount.IsPercentage,
+                            ProductFullName = fullName,
+                            OrderId = order.Id
+                        };
+
+                        _db.DiscountsArchives.Add(discountArchive);
+                    }
                 }
                 // for saving the productArchive items, so we can get them instantly afterwards
                 await _db.SaveChangesAsync();
