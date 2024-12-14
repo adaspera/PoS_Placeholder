@@ -166,7 +166,7 @@ const Home = () => {
                         </>
                     ) : (
                         <>
-                            {item.price} - {item.discount} {getCurrency()}
+                            {item.price} -{item.discount} {getCurrency()}
                         </>
                     )}
                     <i

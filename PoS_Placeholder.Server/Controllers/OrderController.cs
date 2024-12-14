@@ -225,6 +225,7 @@ public class OrderController : ControllerBase
                 {
                     var productVariation = await _db.ProductVariations
                         .Include(pv => pv.Product)
+                        .Include(pv => pv.Discount)
                         .FirstOrDefaultAsync(pv => pv.Id == orderItem.ProductVariationId);
 
                     if (productVariation == null)
@@ -243,8 +244,21 @@ public class OrderController : ControllerBase
                         Quantity = orderItem.Quantity,
                         OrderId = order.Id,
                     };
-
+                    
                     _db.ProductsArchive.Add(productArchive);
+                    
+                    if (productVariation.Discount != null)
+                    {
+                        var discountArchive = new DiscountArchive()
+                        {
+                            Amount = productVariation.Discount.Amount,
+                            IsPercentage = productVariation.Discount.IsPercentage,
+                            ProductFullName = fullName,
+                            OrderId = order.Id
+                        };
+
+                        _db.DiscountsArchives.Add(discountArchive);
+                    }
                 }
                 // for saving the productArchive items, so we can get them instantly afterwards
                 await _db.SaveChangesAsync();
