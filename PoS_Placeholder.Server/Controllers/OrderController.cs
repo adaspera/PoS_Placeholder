@@ -46,8 +46,15 @@ public class OrderController : ControllerBase
 
         var orderResponseDtos = orders.Select(order =>
         {
+            var totalDiscount = order.Discounts.Sum(d =>
+                d.IsPercentage
+                    ? order.Products.Where(p => p.FullName == d.ProductFullName)
+                                    .Sum(p => p.Price * p.Quantity) * d.Amount / 100m
+                    : d.Amount);
+            
             var totalPrice = order.Products.Sum(p => p.Price * p.Quantity)
                              + order.Taxes.Sum(t => t.TaxAmount)
+                             - totalDiscount
                              + (order.Tip ?? 0m);
             return new OrderResponseDto
             {
@@ -79,9 +86,16 @@ public class OrderController : ControllerBase
         var order = await _orderRepository.GetOrderByOrderIdAndBusinessIdAsync(id, user.BusinessId);
         if (order == null)
             return NotFound("Order not found.");
+        
+        var totalDiscount = order.Discounts.Sum(d =>
+            d.IsPercentage
+                ? order.Products.Where(p => p.FullName == d.ProductFullName)
+                    .Sum(p => p.Price * p.Quantity) * d.Amount / 100m
+                : d.Amount);
 
         var totalPrice = order.Products.Sum(p => p.Price * p.Quantity)
                          + order.Taxes.Sum(t => t.TaxAmount)
+                         - totalDiscount
                          + (order.Tip ?? 0m);
 
         var orderResponseDto = new OrderResponseDto
@@ -222,6 +236,8 @@ public class OrderController : ControllerBase
                 _orderRepository.Add(order);
                 await _orderRepository.SaveChangesAsync();
 
+                decimal discountsTotal = 0m;
+                
                 foreach (var orderItem in createOrderDto.OrderItems)
                 {
                     var productVariation = await _db.ProductVariations
@@ -248,12 +264,17 @@ public class OrderController : ControllerBase
                     
                     _db.ProductsArchive.Add(productArchive);
                     
-                    if (productVariation.Discount != null)
+                    var discount = productVariation.Discount;
+                    if (discount != null)
                     {
+                        discountsTotal += discount.IsPercentage
+                            ? productVariation.Price * discount.Amount / 100m
+                            : discount.Amount;
+                        
                         var discountArchive = new DiscountArchive()
                         {
-                            Amount = productVariation.Discount.Amount,
-                            IsPercentage = productVariation.Discount.IsPercentage,
+                            Amount = discount.Amount,
+                            IsPercentage = discount.IsPercentage,
                             ProductFullName = fullName,
                             OrderId = order.Id
                         };
@@ -294,7 +315,7 @@ public class OrderController : ControllerBase
                     Tip = tip,
                     Date = order.Date,
                     Status = order.Status.ToString(),
-                    TotalPrice = subtotal + taxesTotal + tip,
+                    TotalPrice = subtotal + taxesTotal + tip - Math.Round(discountsTotal, 2),
                     Products = productArchives.Select(pa => new OrderProductDto
                     {
                         FullName = pa.FullName,
