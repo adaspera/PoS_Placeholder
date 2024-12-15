@@ -18,6 +18,9 @@ public class ApplicationDbContext : IdentityDbContext<User>
     public DbSet<ProductVariation> ProductVariations { get; set; }
     public DbSet<Order> Orders { get; set; }
     public DbSet<ProductArchive> ProductsArchive { get; set; }
+    public DbSet<Service> Services { get; set; }
+    public DbSet<ServiceArchive> ServicesArchive { get; set; }
+    public DbSet<Appointment> Appointments { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -31,6 +34,21 @@ public class ApplicationDbContext : IdentityDbContext<User>
         modelBuilder.Entity<Order>()
             .HasOne(o => o.Business)
             .WithMany(b => b.Orders)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Appointment>()
+            .HasOne(o => o.User)
+            .WithMany(o => o.Appointments)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Service>()
+            .HasOne(o => o.User)
+            .WithMany(o => o.Services)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Service>()
+            .HasOne(o => o.Business)
+            .WithMany(b => b.Services)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }
