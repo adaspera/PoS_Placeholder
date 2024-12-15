@@ -6,6 +6,7 @@ import * as paymentApi from "@/api/paymentApi.jsx";
 import {getCurrency} from "@/helpers/currencyUtils.jsx";
 import Payment from "@/components/payment/payment.jsx";
 import * as discountApi from "@/api/discountApi.jsx";
+import Giftcard from "@/components/shared/Giftcard.jsx";
 
 const Home = () => {
     const [isLoading, setIsLoading] = useState(true);
@@ -148,9 +149,11 @@ const Home = () => {
         const paymentResponse = await paymentApi.makePayment(paymentRequestDto);
         setPaymentData(paymentResponse);
 
+        console.log(paymentResponse);
+
         setPaySelected(true);
     };
-    
+
     const handleCashPayment = async () => {
         const createOrderDto = {
             Tip: tip ? Number(tip) : null,
@@ -162,10 +165,10 @@ const Home = () => {
             GiftCardId: null,
             Method: 2 // 0 -> "card", 1 -> "giftcard", 2 -> "cash"
         };
-        
+
         const createdOrder = await orderApi.createOrder(createOrderDto);
         console.log(createdOrder);
-        
+
         onPaymentSuccess();
     }
 
@@ -263,7 +266,7 @@ const Home = () => {
     }
 
     const paymentModal = (
-        <Modal isOpen={paySelected} fade={false} size="lg" centered={true}>
+        <Modal isOpen={paySelected} fade={true} size="lg" centered={true}>
             <ModalHeader>
                 Checkout
             </ModalHeader>
@@ -291,55 +294,49 @@ const Home = () => {
                         <span>{orderPreview.total} {getCurrency()}</span>
                     </div>
                 </div>
-                
-                <Form className="mt-3">
-                    <Col sm={10}>
-                        <FormGroup check>
-                            <Input
-                                name="radio2"
-                                type="radio"
-                                value="card"
-                                checked={selectedPaymentMethod === 'card'}
-                                onChange={(e) => setSelectedPaymentMethod('card')}
-                            />
-                            <Label check>
-                                Pay with card
-                            </Label>
-                        </FormGroup>
-                        <FormGroup check>
-                            <Input
-                                name="radio2"
-                                type="radio"
-                                value="giftcard"
-                                checked={selectedPaymentMethod === 'giftcard'}
-                                onChange={(e) => setSelectedPaymentMethod('giftcard')}
-                            />
-                            <Label check>
-                                Pay with gift card
-                            </Label>
-                        </FormGroup>
-                    </Col>
-                </Form>
 
-                {selectedPaymentMethod === 'card' && (
-                    <div className="mt-3">
-                        <h4>Pay with card</h4>
-                        <Payment
-                            paymentData={paymentData}
-                            order={order}
-                            tip={tip}
-                            onPaymentSuccess={onPaymentSuccess}
+                <Col>
+                    <FormGroup check>
+                        <Input
+                            name="radio2"
+                            type="radio"
+                            value="card"
+                            checked={selectedPaymentMethod === 'card'}
+                            onChange={(e) => setSelectedPaymentMethod('card')}
                         />
-                    </div>
-                )}
+                        <Label check>
+                            Pay with card
+                        </Label>
+                    </FormGroup>
+                    {selectedPaymentMethod === 'card' && (
+                        <div className="my-3">
+                            <Payment
+                                paymentData={paymentData}
+                                order={order}
+                                tip={tip}
+                                onPaymentSuccess={onPaymentSuccess}
+                            />
+                        </div>
+                    )}
 
-                {selectedPaymentMethod === 'giftcard' && (
-                    <div className="mt-3">
-                        <h4>Pay with gift card</h4>
-                        {/*<GiftCard onPaymentSuccess={onPaymentSuccess} order={order} tip={tip} />*/}
-                    </div>
-                )}
-
+                    <FormGroup check>
+                        <Input
+                            name="radio2"
+                            type="radio"
+                            value="giftcard"
+                            checked={selectedPaymentMethod === 'giftcard'}
+                            onChange={(e) => setSelectedPaymentMethod('giftcard')}
+                        />
+                        <Label check>
+                            Pay with gift card
+                        </Label>
+                    </FormGroup>
+                    {selectedPaymentMethod === 'giftcard' && (
+                        <div className="mt-3">
+                            <Giftcard onPaymentSuccess={onPaymentSuccess} order={order} tip={tip}/>
+                        </div>
+                    )}
+                </Col>
             </ModalBody>
             <ModalFooter>
                 <Button color="danger" className="w-25" onClick={() => {
