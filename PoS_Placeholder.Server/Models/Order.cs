@@ -11,8 +11,6 @@ public class Order
     
     [Column(TypeName = "decimal(18,2)")]
     public decimal? Tip { get; set; }
-    
-    public string? PaymentIntentId { get; set; }
 
     [Required]
     public DateTime Date { get; set; }
@@ -36,4 +34,5 @@ public class Order
     public ICollection<ProductArchive> Products { get; set; }
     public ICollection<TaxArchive> Taxes { get; set; }
     public ICollection<DiscountArchive> Discounts { get; set; }
+    public ICollection<PaymentArchive> Payments { get; set; }
 }
