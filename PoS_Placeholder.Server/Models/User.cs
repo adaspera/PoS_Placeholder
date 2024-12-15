@@ -20,10 +20,10 @@ public class User : IdentityUser
     
     [Required]
     public int BusinessId { get; set; }
-    
-    [ForeignKey("BusinessId")]
-    public Business Business { get; set; }
-    
+
+    //[ForeignKey("BusinessId")]
+    //public Business Business { get; set; }
+
     // Navigation Properties
     public ICollection<Order> Orders { get; set; }
 

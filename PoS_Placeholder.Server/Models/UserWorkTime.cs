@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+
 namespace PoS_Placeholder.Server.Models
 {
     public class UserWorkTime
@@ -18,13 +19,10 @@ namespace PoS_Placeholder.Server.Models
         public TimeOnly EndTime { get; set; }
 
         [ForeignKey("User")]
-        public string UserId { get; set; }
-
-        public virtual User User { get; set; }
+        public string UserId { get; set; }  
 
         public TimeOnly? BreakStart { get; set; }
 
         public TimeOnly? BreakEnd { get; set; }
     }
-
 }

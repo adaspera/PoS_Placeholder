@@ -10,6 +10,7 @@ using PoS_Placeholder.Server.Logging;
 using PoS_Placeholder.Server.Models;
 using PoS_Placeholder.Server.Repositories;
 using PoS_Placeholder.Server.Services;
+using PoS_Placeholder.Server.Utilities;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,10 +40,20 @@ builder.Services.AddScoped<ProductRepository>();
 builder.Services.AddScoped<ProductVariationRepository>();
 builder.Services.AddScoped<OrderRepository>();
 builder.Services.AddScoped<DiscountRepository>();
+builder.Services.AddScoped<BusinessRepository>();
+builder.Services.AddScoped<UserRepository>();
+builder.Services.AddScoped<UserWorkTimeRepository>();
+
 
 builder.Logging.AddLogger(configuration =>
 {
     builder.Configuration.GetSection("FileLogger").Bind(configuration);
+});
+
+builder.Services.AddControllers()
+.AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.Converters.Add(new TimeOnlyConverter());
 });
 
 builder.Services.AddSingleton(u =>

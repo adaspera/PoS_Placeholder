@@ -17,25 +17,32 @@ namespace PoS_Placeholder.Server.Controllers;
 [ApiController]
 public class BusinessController : ControllerBase
 {
-    private readonly ApplicationDbContext _db;
-    public BusinessController(ApplicationDbContext context)
+    private readonly BusinessRepository _businessRepository;
+    private readonly UserRepository _userRepository;
+    private readonly UserWorkTimeRepository _userWorkTimeRepository;
+    private readonly UserManager<User> _userManager;
+
+    public BusinessController(BusinessRepository businessRepository, UserManager<User> userManager, UserRepository userRepository, UserWorkTimeRepository userWorkTimeRepository)
     {
-        _db = context;
+        _businessRepository = businessRepository;
+        _userManager = userManager;
+        _userRepository = userRepository;
+        _userWorkTimeRepository = userWorkTimeRepository;
     }
 
     [HttpPost]
-    [Authorize(Roles = nameof(UserRole.SuperAdmin))] // Restrict to Super Admin
+    [Authorize(Roles = nameof(UserRole.SuperAdmin))]
     public async Task<IActionResult> CreateBusiness([FromBody] CreateBusinessDto dto)
     {
         if (!ModelState.IsValid)
         {
-            return UnprocessableEntity(ModelState); // 422 Validation exception
+            return UnprocessableEntity(ModelState);
         }
 
         // Check for uniqueness
-        if (_db.Businesses.Any(b => b.Phone == dto.Phone || b.Email == dto.Email))
+        if (await _businessRepository.ExistsByPhoneOrEmailAsync(dto.Phone, dto.Email))
         {
-            return Conflict("Phone/email already in use."); // 409 Conflict
+            return Conflict("Phone/email already in use.");
         }
 
         var business = new Business
@@ -51,10 +58,10 @@ public class BusinessController : ControllerBase
 
         try
         {
-            _db.Businesses.Add(business);
-            await _db.SaveChangesAsync();
+            _businessRepository.Add(business);
+            await _businessRepository.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(CreateBusiness), new { id = business.Id }, business); // 201 Created
+            return CreatedAtAction(nameof(CreateBusiness), new { id = business.Id }, business);
         }
         catch (Exception)
         {
@@ -63,17 +70,15 @@ public class BusinessController : ControllerBase
     }
 
     [HttpPut("{business_id:int}")]
-    [Authorize(Roles = nameof(UserRole.Owner))] // Restrict to Business Owners
+    [Authorize(Roles = nameof(UserRole.Owner))]
     public async Task<IActionResult> UpdateBusiness(int business_id, [FromBody] UpdateBusinessDto dto)
     {
-        // Find the business by ID
-        var business = await _db.Businesses.FindAsync(business_id);
+        var business = await _businessRepository.GetByIdAsync(business_id);
         if (business == null)
         {
             return NotFound("Could not find the business.");
         }
 
-        // Update fields only if provided
         if (!string.IsNullOrWhiteSpace(dto.Name)) business.Name = dto.Name;
         if (!string.IsNullOrWhiteSpace(dto.Phone)) business.Phone = dto.Phone;
         if (!string.IsNullOrWhiteSpace(dto.Email)) business.Email = dto.Email;
@@ -82,23 +87,44 @@ public class BusinessController : ControllerBase
         if (!string.IsNullOrWhiteSpace(dto.Region)) business.Region = dto.Region;
         if (!string.IsNullOrWhiteSpace(dto.Country)) business.Country = dto.Country;
 
-        // Check for uniqueness constraints
-        if (_db.Businesses.Any(b => (b.Phone == business.Phone || b.Email == business.Email) && b.Id != business_id))
+        if (await _businessRepository.UniquePhoneOrEmailAsync(business.Phone, business.Email, business_id))
         {
             return Conflict("Phone/email already exists.");
         }
 
-        // Save changes
         try
         {
-            await _db.SaveChangesAsync();
+            _businessRepository.Update(business);
+            await _businessRepository.SaveChangesAsync();
             return Ok(business);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(500, "An error occurred while updating the business.");
         }
     }
+
+    [HttpGet("{business_id:int}/employees")]
+    [Authorize(Roles = nameof(UserRole.Owner))] // Restrict to Business Owners
+    public async Task<IActionResult> GetEmployees(int business_id)
+    {
+        // Validate business existence
+        var business = await _businessRepository.GetByIdAsync(business_id);
+        if (business == null)
+        {
+            return NotFound("Could not find the business.");
+        }
+
+        // Retrieve employees for the business
+        var employees = await _userRepository.GetEmployeesByBusinessIdAsync(business_id);
+        if (employees == null || !employees.Any())
+        {
+            return NotFound("No employees found for this business.");
+        }
+
+        return Ok(employees); // 200 OK
+    }
+
     [HttpPut("{business_id:int}/employees/{employee_id}")]
     [Authorize(Roles = nameof(UserRole.Owner))] // Restrict to Business Owners
     public async Task<IActionResult> UpdateEmployee(int business_id, string employee_id, [FromBody] UpdateEmployeeDto dto)
@@ -109,14 +135,14 @@ public class BusinessController : ControllerBase
         }
 
         // Find the business and ensure it exists
-        var business = await _db.Businesses.FindAsync(business_id);
+        var business = await _businessRepository.GetByIdAsync(business_id);
         if (business == null)
         {
-            return NotFound("Business not found.");
+            return NotFound("Could not find the business.");
         }
 
         // Find the employee by ID and ensure they belong to the business
-        var employee = await _db.Users.FirstOrDefaultAsync(u => u.Id == employee_id && u.BusinessId == business_id);
+        var employee = await _userRepository.GetEmployeeByIdAndBusinessAsync(employee_id, business_id);
         if (employee == null)
         {
             return NotFound("Employee not found or does not belong to the business.");
@@ -132,8 +158,8 @@ public class BusinessController : ControllerBase
         // Save changes
         try
         {
-            _db.Users.Update(employee);
-            await _db.SaveChangesAsync();
+            _userRepository.Update(employee);
+            await _userRepository.SaveChangesAsync();
             return Ok(employee); // 200 OK
         }
         catch (Exception)
@@ -146,14 +172,14 @@ public class BusinessController : ControllerBase
     public async Task<IActionResult> DeleteEmployee(int business_id, string employee_id)
     {
         // Find the business and ensure it exists
-        var business = await _db.Businesses.FindAsync(business_id);
+        var business = await _businessRepository.GetByIdAsync(business_id);
         if (business == null)
         {
-            return NotFound("Business not found.");
+            return NotFound("Could not find the business.");
         }
 
         // Find the employee by ID and ensure they belong to the business
-        var employee = await _db.Users.FirstOrDefaultAsync(u => u.Id == employee_id && u.BusinessId == business_id);
+        var employee = await _userRepository.GetEmployeeByIdAndBusinessAsync(employee_id, business_id);
         if (employee == null)
         {
             return NotFound("Employee not found or does not belong to the business.");
@@ -162,8 +188,8 @@ public class BusinessController : ControllerBase
         try
         {
             // Delete the employee
-            _db.Users.Remove(employee);
-            await _db.SaveChangesAsync();
+            _userRepository.Remove(employee);
+            await _userRepository.SaveChangesAsync();
             return NoContent(); // 204 No Content
         }
         catch (DbUpdateException ex)
@@ -172,20 +198,48 @@ public class BusinessController : ControllerBase
             return StatusCode(500, "An error occurred while deleting the employee.");
         }
     }
-  
-    [HttpPost("{business_id:int}/users/{employee_id}/schedule")]
+
+    [HttpGet("{business_id:int}/users/{employee_id}/schedules")]
     [Authorize(Roles = nameof(UserRole.Owner))]
-    public async Task<IActionResult> AssignSchedule(int business_id, string employee_id, [FromForm] AssignScheduleDto scheduleDto)
+    public async Task<IActionResult> GetSchedules(int business_id, string employee_id)
     {
         // Validate business existence
-        var business = await _db.Businesses.FindAsync(business_id);
+        var business = await _businessRepository.GetByIdAsync(business_id);
         if (business == null)
         {
-            return NotFound("Business not found.");
+            return NotFound("Could not find the business.");
         }
 
         // Validate user belongs to the business
-        var employee = await _db.Users.FirstOrDefaultAsync(u => u.Id == employee_id && u.BusinessId == business_id);
+        var employee = await _userRepository.GetEmployeeByIdAndBusinessAsync(employee_id, business_id);
+        if (employee == null)
+        {
+            return NotFound("Employee not found or does not belong to the business.");
+        }
+
+        // Retrieve schedules for the employee
+        var schedules = await _userWorkTimeRepository.GetSchedulesByEmployeeIdAsync(employee_id);
+        if (schedules == null || !schedules.Any())
+        {
+            return NotFound("No schedules found for this employee.");
+        }
+
+        return Ok(schedules); // 200 OK
+    }
+
+    [HttpPost("{business_id:int}/users/{employee_id}/schedule")]
+    [Authorize(Roles = nameof(UserRole.Owner))]
+    public async Task<IActionResult> AssignSchedule(int business_id, string employee_id, [FromBody] AssignScheduleDto scheduleDto)
+    {
+        // Validate business existence
+        var business = await _businessRepository.GetByIdAsync(business_id);
+        if (business == null)
+        {
+            return NotFound("Could not find the business.");
+        }
+
+        // Validate user belongs to the business
+        var employee = await _userRepository.GetEmployeeByIdAndBusinessAsync(employee_id, business_id);
         if (employee == null)
         {
             return NotFound("Employee not found or does not belong to the business.");
@@ -194,6 +248,9 @@ public class BusinessController : ControllerBase
         // Validate input data
         if (scheduleDto.StartTime >= scheduleDto.EndTime)
             return BadRequest("Start time must be before end time.");
+
+        if (scheduleDto.BreakStart >= scheduleDto.BreakEnd)
+            return BadRequest("Break start time must be before end time.");
 
         // Create the schedule
         var userWorkTime = new UserWorkTime
@@ -208,8 +265,8 @@ public class BusinessController : ControllerBase
 
         try
         {
-            _db.UserWorkTimes.Add(userWorkTime);
-            await _db.SaveChangesAsync();
+            _userWorkTimeRepository.Add(userWorkTime);
+            await _userWorkTimeRepository.SaveChangesAsync();
 
             return CreatedAtAction(nameof(AssignSchedule), new { id = userWorkTime.Id }, userWorkTime); // 201 Created
         }
@@ -223,25 +280,25 @@ public class BusinessController : ControllerBase
     [Authorize(Roles = nameof(UserRole.Owner))]
     public async Task<IActionResult> UpdateSchedule(int business_id, string employee_id, int schedule_id, [FromForm] AssignScheduleDto scheduleDto)
     {
-        // Validate schedule existence
-        var schedule = await _db.UserWorkTimes.FirstOrDefaultAsync(s => s.Id == schedule_id && s.UserId == employee_id);
-        if (schedule == null)
-        {
-            return NotFound("Schedule not found.");
-        }
-
         // Validate business existence
-        var business = await _db.Businesses.FindAsync(business_id);
+        var business = await _businessRepository.GetByIdAsync(business_id);
         if (business == null)
         {
-            return NotFound("Business not found.");
+            return NotFound("Could not find the business.");
         }
 
         // Validate user belongs to the business
-        var employee = await _db.Users.FirstOrDefaultAsync(u => u.Id == employee_id && u.BusinessId == business_id);
+        var employee = await _userRepository.GetEmployeeByIdAndBusinessAsync(employee_id, business_id);
         if (employee == null)
         {
             return NotFound("Employee not found or does not belong to the business.");
+        }
+
+        // Validate schedule existence
+        var schedule = await _userWorkTimeRepository.GetScheduleByIdAndEmployeeAsync(employee_id, schedule_id);
+        if (schedule == null)
+        {
+            return NotFound("Schedule not found.");
         }
 
         // Validate input data
@@ -257,8 +314,8 @@ public class BusinessController : ControllerBase
 
         try
         {
-            _db.UserWorkTimes.Update(schedule);
-            await _db.SaveChangesAsync();
+            _userWorkTimeRepository.Update(schedule);
+            await _userWorkTimeRepository.SaveChangesAsync();
 
             return Ok(schedule); // 200 OK
         }
@@ -273,31 +330,31 @@ public class BusinessController : ControllerBase
     [Authorize(Roles = nameof(UserRole.Owner))]
     public async Task<IActionResult> DeleteSchedule(int business_id, string employee_id, int schedule_id)
     {
-        // Validate schedule existence
-        var schedule = await _db.UserWorkTimes.FirstOrDefaultAsync(s => s.Id == schedule_id && s.UserId == employee_id);
-        if (schedule == null)
-        {
-            return NotFound("Schedule not found.");
-        }
-
         // Validate business existence
-        var business = await _db.Businesses.FindAsync(business_id);
+        var business = await _businessRepository.GetByIdAsync(business_id);
         if (business == null)
         {
-            return NotFound("Business not found.");
+            return NotFound("Could not find the business.");
         }
 
         // Validate user belongs to the business
-        var employee = await _db.Users.FirstOrDefaultAsync(u => u.Id == employee_id && u.BusinessId == business_id);
+        var employee = await _userRepository.GetEmployeeByIdAndBusinessAsync(employee_id, business_id);
         if (employee == null)
         {
             return NotFound("Employee not found or does not belong to the business.");
         }
 
+        // Validate schedule existence
+        var schedule = await _userWorkTimeRepository.GetScheduleByIdAndEmployeeAsync(employee_id, schedule_id);
+        if (schedule == null)
+        {
+            return NotFound("Schedule not found.");
+        }
+
         try
         {
-            _db.UserWorkTimes.Remove(schedule);
-            await _db.SaveChangesAsync();
+            _userWorkTimeRepository.Remove(schedule);
+            await _userWorkTimeRepository.SaveChangesAsync();
 
             return NoContent(); // 204 No Content
         }
@@ -306,6 +363,5 @@ public class BusinessController : ControllerBase
             return StatusCode(500, "An error occurred while deleting the schedule.");
         }
     }
-
 }
 
