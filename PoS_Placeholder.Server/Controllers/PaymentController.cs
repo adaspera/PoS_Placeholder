@@ -149,6 +149,9 @@ public class PaymentController : ControllerBase
                     Date = order.Date,
                     Status = order.Status.ToString(),
                     TotalPrice = totalPricePaid,
+                    SubTotal = null,
+                    TaxesTotal = null,
+                    DiscountsTotal = null,
                     Products = order.Products.Select(pa => new OrderProductDto
                     {
                         FullName = pa.FullName,
