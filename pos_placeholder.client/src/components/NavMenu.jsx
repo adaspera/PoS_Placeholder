@@ -26,13 +26,17 @@ const NavMenu = ({ onLogout }) => {
                         <i className="bi-briefcase" style={{fontSize: '20px'}}/>
                         <div>Business</div>
                     </NavLink>
-                    <NavLink tag={Link} to="/tax" className="text-dark d-flex flex-column align-items-center" style={{width: "80px"}}>
+                    <NavLink tag={Link} to="/discount" className="text-dark d-flex flex-column align-items-center" style={{width: "80px"}}>
                         <i className="bi-percent" style={{fontSize: '20px'}}/>
                         <div>Discount</div>
                     </NavLink>
                     <NavLink tag={Link} to="/products" className="text-dark d-flex flex-column align-items-center" style={{width: "80px"}}>
                         <i className="bi-box-seam" style={{fontSize: '20px'}}/>
                         <div>Products</div>
+                    </NavLink>
+                    <NavLink tag={Link} to="/services" className="text-dark d-flex flex-column align-items-center" style={{width: "80px"}}>
+                        <i className="bi-person-raised-hand" style={{fontSize: '20px'}}/>
+                        <div>Services</div>
                     </NavLink>
                     <NavLink tag={Link} to="/orders" className="text-dark d-flex flex-column align-items-center" style={{width: "80px"}}>
                         <i className="bi-receipt" style={{fontSize: '20px'}}/>

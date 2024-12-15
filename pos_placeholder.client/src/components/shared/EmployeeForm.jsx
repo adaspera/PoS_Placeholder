@@ -1,7 +1,7 @@
 import {Button, Form, FormGroup, Input, Label, Row} from "reactstrap";
 import {useState} from "react";
 
-const EmployeeForm = ({ onSubmit, credentials }) => {
+const EmployeeForm = ({ onSubmit, credentials, formId = '0' }) => {
     const [newCredentials, setNewCredentials] = useState(credentials);
 
     const handleInputChange = (e) => {
@@ -19,14 +19,14 @@ const EmployeeForm = ({ onSubmit, credentials }) => {
         }}>
             {Object.entries(newCredentials)
                 .map(([key, value]) => (
-                    <FormGroup key={key}>
-                        <Label for={key}>
+                    <FormGroup key={formId + key}>
+                        <Label for={formId + key}>
                             {key
                                 .replace(/([A-Z])/g, " $1")
                                 .replace(/^./, (str) => str.toUpperCase())}
                         </Label>
                         <Input
-                            id={key}
+                            id={formId + key}
                             value={value}
                             onChange={handleInputChange}
                             placeholder={`Enter your ${key

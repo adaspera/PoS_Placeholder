@@ -41,7 +41,7 @@ export const createWorkTime = async (workTime) => {
 
 };
 
-export const updateWorkTimes = async (workTime) => {
+export const updateWorkTimes = async (workTimes) => {
 
 };
 
@@ -115,20 +115,11 @@ const userWorkTimes = [
         breakEnd: "12:30:00"
     },
     {
-        id: 2,
-        day: "2024-12-01T00:00:00Z",
-        startTime: "09:00:00",
-        endTime: "17:00:00",
-        userId: 2,
-        breakStart: "13:00:00",
-        breakEnd: "13:45:00"
-    },
-    {
         id: 3,
         day: "2024-12-02T00:00:00Z",
         startTime: "10:00:00",
         endTime: "18:00:00",
-        userId: 3,
+        userId: 1,
         breakStart: "14:00:00",
         breakEnd: "14:30:00"
     },

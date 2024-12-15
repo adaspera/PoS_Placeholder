@@ -52,7 +52,7 @@ const Business = () => {
     };
 
     const removeEmployee = async (id) => {
-        await businessApi.deleteEmployee()
+        await businessApi.deleteEmployee(id)
         setEmployees(employees.filter(employee => employee.id !== id));
     }
 
@@ -248,6 +248,7 @@ const Business = () => {
                                 </div>
                                 <EmployeeForm
                                     credentials={refactorForEditing(employee)}
+                                    formId={employee.id}
                                     onSubmit={(updatedCredentials) => {
                                         handleUpdateEmployee({id: employee.id, ...updatedCredentials});
                                     }}
