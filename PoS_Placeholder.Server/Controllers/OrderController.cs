@@ -19,15 +19,17 @@ public class OrderController : ControllerBase
     private readonly UserManager<User> _userManager;
     private readonly OrderRepository _orderRepository;
     private readonly DiscountRepository _discountRepository;
+    private readonly GiftcardRepository _giftcardRepository;
     private readonly ITaxService _taxService;
     private readonly ApplicationDbContext _db;
 
     public OrderController(UserManager<User> userManager, OrderRepository orderRepository, ITaxService taxService,
-        ApplicationDbContext db, DiscountRepository discountRepository)
+        ApplicationDbContext db, DiscountRepository discountRepository, GiftcardRepository giftcardRepository)
     {
         _userManager = userManager;
         _orderRepository = orderRepository;
         _discountRepository = discountRepository;
+        _giftcardRepository = giftcardRepository;
         _taxService = taxService;
         _db = db;
     }
@@ -46,8 +48,15 @@ public class OrderController : ControllerBase
 
         var orderResponseDtos = orders.Select(order =>
         {
+            var totalDiscount = order.Discounts.Sum(d =>
+                d.IsPercentage
+                    ? order.Products.Where(p => p.FullName == d.ProductFullName)
+                        .Sum(p => p.Price * p.Quantity) * d.Amount / 100m
+                    : d.Amount);
+
             var totalPrice = order.Products.Sum(p => p.Price * p.Quantity)
                              + order.Taxes.Sum(t => t.TaxAmount)
+                             - totalDiscount
                              + (order.Tip ?? 0m);
             return new OrderResponseDto
             {
@@ -80,8 +89,15 @@ public class OrderController : ControllerBase
         if (order == null)
             return NotFound("Order not found.");
 
+        var totalDiscount = order.Discounts.Sum(d =>
+            d.IsPercentage
+                ? order.Products.Where(p => p.FullName == d.ProductFullName)
+                    .Sum(p => p.Price * p.Quantity) * d.Amount / 100m
+                : d.Amount);
+
         var totalPrice = order.Products.Sum(p => p.Price * p.Quantity)
                          + order.Taxes.Sum(t => t.TaxAmount)
+                         - totalDiscount
                          + (order.Tip ?? 0m);
 
         var orderResponseDto = new OrderResponseDto
@@ -139,7 +155,7 @@ public class OrderController : ControllerBase
                     ? productVariation.Price * discount.Amount / 100
                     : discount.Amount;
             }
-            
+
             subTotal += productVariation.Price * orderItem.Quantity;
         }
 
@@ -203,7 +219,7 @@ public class OrderController : ControllerBase
         var taxes = _taxService.GetTaxesByCountry("LIT");
         if (taxes == null)
             return NotFound("No Taxes found for LIT.");
-        
+
         using (var transaction = await _db.Database.BeginTransactionAsync())
         {
             try
@@ -212,15 +228,17 @@ public class OrderController : ControllerBase
                 var order = new Order
                 {
                     Tip = tip,
-                    PaymentIntentId = createOrderDto.PaymentIntentId,
                     Date = DateTime.Now,
                     Status = OrderStatus.Closed,
                     UserId = user.Id,
                     BusinessId = user.BusinessId
                 };
 
+                // Order entry saved to db, so we can use them instantly
                 _orderRepository.Add(order);
                 await _orderRepository.SaveChangesAsync();
+
+                decimal discountsTotal = 0m;
 
                 foreach (var orderItem in createOrderDto.OrderItems)
                 {
@@ -245,15 +263,20 @@ public class OrderController : ControllerBase
                         Quantity = orderItem.Quantity,
                         OrderId = order.Id,
                     };
-                    
+
                     _db.ProductsArchive.Add(productArchive);
-                    
-                    if (productVariation.Discount != null)
+
+                    var discount = productVariation.Discount;
+                    if (discount != null)
                     {
+                        discountsTotal += discount.IsPercentage
+                            ? productVariation.Price * discount.Amount / 100m
+                            : discount.Amount;
+
                         var discountArchive = new DiscountArchive()
                         {
-                            Amount = productVariation.Discount.Amount,
-                            IsPercentage = productVariation.Discount.IsPercentage,
+                            Amount = discount.Amount,
+                            IsPercentage = discount.IsPercentage,
                             ProductFullName = fullName,
                             OrderId = order.Id
                         };
@@ -261,12 +284,13 @@ public class OrderController : ControllerBase
                         _db.DiscountsArchives.Add(discountArchive);
                     }
                 }
-                // for saving the productArchive items, so we can get them instantly afterwards
+
+                // productArchive and discountArchive entries saved to db, so we can get use them instantly
                 await _db.SaveChangesAsync();
-                
+
                 var productArchives = await _db.ProductsArchive.Where(pa => pa.OrderId == order.Id).ToListAsync();
                 var subtotal = productArchives.Sum(pa => pa.Price * pa.Quantity);
-                
+
                 var taxesTotal = 0m;
 
                 foreach (var tax in taxes)
@@ -284,8 +308,74 @@ public class OrderController : ControllerBase
 
                     _db.TaxesArchive.Add(taxArchiveEntry);
                 }
-                // final tax changes saved and transaction commited, everything saved successfully after this point
+
+                // tax entries saved to db, so we can use them instantly
                 await _db.SaveChangesAsync();
+
+                var grandTotal = subtotal + taxesTotal + tip - Math.Round(discountsTotal, 2);
+
+                // Creating PaymentArchive entry based on the Method (payment method) received in createOrderDto
+                PaymentArchive newPaymentArchive = new PaymentArchive
+                {
+                    OrderId = order.Id,
+                    PaidPrice = grandTotal
+                };
+
+                switch (createOrderDto.Method)
+                {
+                    case PaymentMethod.Card:
+                        if (createOrderDto.PaymentIntentId == null)
+                        {
+                            await transaction.RollbackAsync();
+                            return BadRequest("Payment Intent Id not provided.");
+                        }
+                        newPaymentArchive.Method = PaymentMethod.Card;
+                        newPaymentArchive.PaymentIntentId = createOrderDto.PaymentIntentId;
+                        newPaymentArchive.GiftCardId = null;
+                        break;
+
+                    case PaymentMethod.GiftCard:
+                        if (createOrderDto.GiftCardId == null)
+                        {
+                            await transaction.RollbackAsync();
+                            return BadRequest("Giftcard Id not provided.");
+                        }
+                        var giftcard = await _giftcardRepository.GetGiftcardByIdAndBusinessIdAsync(
+                            createOrderDto.GiftCardId.Trim(), user.BusinessId);
+                        if (giftcard == null)
+                        {
+                            await transaction.RollbackAsync();
+                            return BadRequest("Incorrect Giftcard Id.");
+                        }
+                        if (giftcard.Balance < grandTotal)
+                        {
+                            await transaction.RollbackAsync();
+                            return BadRequest("Insufficient giftcard balance.");
+                        }
+                        giftcard.Balance -= grandTotal;
+                        _giftcardRepository.Update(giftcard);
+
+                        newPaymentArchive.Method = PaymentMethod.GiftCard;
+                        newPaymentArchive.GiftCardId = createOrderDto.GiftCardId;
+                        newPaymentArchive.PaymentIntentId = null;
+                        break;
+
+                    case PaymentMethod.Cash:
+                        newPaymentArchive.Method = PaymentMethod.Cash;
+                        newPaymentArchive.PaymentIntentId = null;
+                        newPaymentArchive.GiftCardId = null;
+                        break;
+
+                    default:
+                        await transaction.RollbackAsync();
+                        return BadRequest("Unknown payment method.");
+                }
+
+                // paymentArchive (and giftcard changes if giftcard payment method) saved to db
+                _db.PaymentsArchive.Add(newPaymentArchive);
+                await _db.SaveChangesAsync();
+
+                // transaction commited -> everything commited to db after this point
                 await transaction.CommitAsync();
 
                 var orderResponseDto = new OrderResponseDto
@@ -294,7 +384,7 @@ public class OrderController : ControllerBase
                     Tip = tip,
                     Date = order.Date,
                     Status = order.Status.ToString(),
-                    TotalPrice = subtotal + taxesTotal + tip,
+                    TotalPrice = grandTotal,
                     Products = productArchives.Select(pa => new OrderProductDto
                     {
                         FullName = pa.FullName,

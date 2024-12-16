@@ -1,4 +1,4 @@
-﻿import {Button, Col, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader, Row} from "reactstrap";
+﻿import {Button, Col, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader, Row, Form, FormGroup} from "reactstrap";
 import {useEffect, useState} from "react";
 import * as productApi from "@/api/productApi.jsx";
 import * as orderApi from "@/api/orderApi.jsx";
@@ -6,14 +6,16 @@ import * as paymentApi from "@/api/paymentApi.jsx";
 import {getCurrency} from "@/helpers/currencyUtils.jsx";
 import Payment from "@/components/payment/payment.jsx";
 import * as discountApi from "@/api/discountApi.jsx";
+import Giftcard from "@/components/shared/Giftcard.jsx";
 
 const Home = () => {
     const [isLoading, setIsLoading] = useState(true);
 
     const [tip, setTip] = useState('');
-    const [orderPreview, setOrderPreview] = useState([]);
+    const [orderPreview, setOrderPreview] = useState({});
     const [order, setOrder] = useState({products: []});
     const [paymentData, setPaymentData] = useState({});
+    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
 
     const [totalPrice, setTotalPrice] = useState("0");
     const [products, setProducts] = useState(null);
@@ -116,6 +118,7 @@ const Home = () => {
     };
 
     const onPaymentSuccess = () => {
+        setSelectedPaymentMethod(null);
         setPaySelected(false);
         setOrder({products: []});
     };
@@ -132,7 +135,9 @@ const Home = () => {
                 ProductVariationId: item.productVariationId,
                 Quantity: item.quantity
             })),
-            PaymentIntentId: null
+            PaymentIntentId: null,
+            GiftCardId: null,
+            Method: null
         };
 
         const orderPreviewResponse = await orderApi.getOrderPreview(createOrderDto);
@@ -144,8 +149,28 @@ const Home = () => {
         const paymentResponse = await paymentApi.makePayment(paymentRequestDto);
         setPaymentData(paymentResponse);
 
+        console.log(paymentResponse);
+
         setPaySelected(true);
     };
+
+    const handleCashPayment = async () => {
+        const createOrderDto = {
+            Tip: tip ? Number(tip) : null,
+            OrderItems: order.products.map(item => ({
+                ProductVariationId: item.productVariationId,
+                Quantity: item.quantity
+            })),
+            PaymentIntentId: null,
+            GiftCardId: null,
+            Method: 2 // 0 -> "card", 1 -> "giftcard", 2 -> "cash"
+        };
+
+        const createdOrder = await orderApi.createOrder(createOrderDto);
+        console.log(createdOrder);
+
+        onPaymentSuccess();
+    }
 
     const handleProductClick = async (product) => {
         setSelectedProduct(product);
@@ -160,7 +185,7 @@ const Home = () => {
                 <Col className="d-flex justify-content-end">
                     {item.isDiscountPercentage ? (
                         <>
-                            <span style={{ textDecoration: "line-through" }}>
+                            <span style={{textDecoration: "line-through"}}>
                                 {item.price} {getCurrency()}
                             </span>
                             &nbsp;
@@ -168,7 +193,7 @@ const Home = () => {
                         </>
                     ) : (
                         <>
-                            {item.price} -{item.discount} {getCurrency()}
+                            {item.price}{item.discount === null ? "" : " -"}{item.discount} {getCurrency()}
                         </>
                     )}
                     <i
@@ -240,8 +265,8 @@ const Home = () => {
         return <div>Loading...</div>;
     }
 
-    const paymentModal =
-        <Modal isOpen={paySelected} fade={false} size="lg" centered={true}>
+    const paymentModal = (
+        <Modal isOpen={paySelected} fade={true} size="lg" centered={true}>
             <ModalHeader>
                 Checkout
             </ModalHeader>
@@ -249,36 +274,86 @@ const Home = () => {
                 <div>
                     <div className="d-flex justify-content-between">
                         <span>Subtotal:</span>
-                        <span>{orderPreview.subTotal} €</span>
+                        <span>{orderPreview.subTotal} {getCurrency()}</span>
                     </div>
                     <div className="d-flex justify-content-between">
                         <span>Taxes:</span>
-                        <span>{orderPreview.taxesTotal} €</span>
+                        <span>{orderPreview.taxesTotal} {getCurrency()}</span>
                     </div>
                     <div className="d-flex justify-content-between">
                         <span>Discounts:</span>
-                        <span>{orderPreview.discountsTotal} €</span>
+                        <span>{orderPreview.discountsTotal} {getCurrency()}</span>
                     </div>
                     <div className="d-flex justify-content-between">
                         <span>Tip:</span>
-                        <span>{orderPreview.tip} €</span>
+                        <span>{orderPreview.tip} {getCurrency()}</span>
                     </div>
                     <hr/>
                     <div className="d-flex justify-content-between fw-bold">
                         <span>Total:</span>
-                        <span>{orderPreview.total} €</span>
+                        <span>{orderPreview.total} {getCurrency()}</span>
                     </div>
                 </div>
-                <div>
-                    <Payment paymentData={paymentData} order={order} tip={tip} onPaymentSuccess={onPaymentSuccess}/>
-                </div>
+
+                <Col>
+                    <FormGroup check>
+                        <Input
+                            name="radio2"
+                            type="radio"
+                            value="card"
+                            checked={selectedPaymentMethod === 'card'}
+                            onChange={(e) => setSelectedPaymentMethod('card')}
+                        />
+                        <Label check>
+                            Pay with card
+                        </Label>
+                    </FormGroup>
+                    {selectedPaymentMethod === 'card' && (
+                        <div className="my-3">
+                            <Payment
+                                paymentData={paymentData}
+                                order={order}
+                                tip={tip}
+                                onPaymentSuccess={onPaymentSuccess}
+                            />
+                        </div>
+                    )}
+
+                    <FormGroup check>
+                        <Input
+                            name="radio2"
+                            type="radio"
+                            value="giftcard"
+                            checked={selectedPaymentMethod === 'giftcard'}
+                            onChange={(e) => setSelectedPaymentMethod('giftcard')}
+                        />
+                        <Label check>
+                            Pay with gift card
+                        </Label>
+                    </FormGroup>
+                    {selectedPaymentMethod === 'giftcard' && (
+                        <div className="mt-3">
+                            <Giftcard onPaymentSuccess={onPaymentSuccess} order={order} tip={tip}/>
+                        </div>
+                    )}
+                </Col>
             </ModalBody>
             <ModalFooter>
-                <Button color="danger" className="w-25" onClick={() => setPaySelected(false)}>
+                <Button color="danger" className="w-25" onClick={() => {
+                    setPaySelected(false);
+                    setSelectedPaymentMethod(null);
+                }}>
                     Cancel
+                </Button>
+                <Button color="success" className="w-25"
+                        onClick={() => {
+                            handleCashPayment();
+                        }}>
+                    Pay with cash
                 </Button>
             </ModalFooter>
         </Modal>
+    );
 
     return (
         <Row style={{height: "85vh"}}>

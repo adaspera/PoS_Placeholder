@@ -21,6 +21,9 @@ public class ApplicationDbContext : IdentityDbContext<User>
     public DbSet<TaxArchive> TaxesArchive { get; set; }
     public DbSet<DiscountArchive> DiscountsArchives { get; set; }
     public DbSet<Discount> Discounts { get; set; }
+    public DbSet<UserWorkTime> UserWorkTimes { get; set; }
+    public DbSet<Giftcard> Giftcards { get; set; }
+    public DbSet<PaymentArchive> PaymentsArchive  { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
