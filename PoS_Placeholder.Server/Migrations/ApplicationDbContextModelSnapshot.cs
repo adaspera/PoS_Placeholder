@@ -311,6 +311,9 @@ namespace PoS_Placeholder.Server.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Orders");
+
+                    b.ToTable("Businesses", (string)null);
+
                 });
 
             modelBuilder.Entity("PoS_Placeholder.Server.Models.PaymentArchive", b =>
@@ -368,36 +371,7 @@ namespace PoS_Placeholder.Server.Migrations
 
                     b.HasIndex("BusinessId");
 
-                    b.ToTable("Products");
-                });
-
-            modelBuilder.Entity("PoS_Placeholder.Server.Models.ProductArchive", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("FullName")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<int>("OrderId")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OrderId");
-
-                    b.ToTable("ProductsArchive");
+                    b.ToTable("Products", (string)null);
                 });
 
             modelBuilder.Entity("PoS_Placeholder.Server.Models.ProductVariation", b =>
@@ -432,7 +406,7 @@ namespace PoS_Placeholder.Server.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("ProductVariations");
+                    b.ToTable("ProductVariations", (string)null);
                 });
 
             modelBuilder.Entity("PoS_Placeholder.Server.Models.TaxArchive", b =>
@@ -598,6 +572,7 @@ namespace PoS_Placeholder.Server.Migrations
                         .IsRequired();
                 });
 
+
             modelBuilder.Entity("PoS_Placeholder.Server.Models.Discount", b =>
                 {
                     b.HasOne("PoS_Placeholder.Server.Models.Business", "Business")
@@ -672,17 +647,6 @@ namespace PoS_Placeholder.Server.Migrations
                     b.Navigation("Business");
                 });
 
-            modelBuilder.Entity("PoS_Placeholder.Server.Models.ProductArchive", b =>
-                {
-                    b.HasOne("PoS_Placeholder.Server.Models.Order", "Order")
-                        .WithMany("Products")
-                        .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Order");
-                });
-
             modelBuilder.Entity("PoS_Placeholder.Server.Models.ProductVariation", b =>
                 {
                     b.HasOne("PoS_Placeholder.Server.Models.Discount", "Discount")
@@ -691,7 +655,7 @@ namespace PoS_Placeholder.Server.Migrations
                         .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("PoS_Placeholder.Server.Models.Product", "Product")
-                        .WithMany("ProductVariations")
+                        .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

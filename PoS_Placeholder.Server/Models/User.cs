@@ -7,6 +7,7 @@ namespace PoS_Placeholder.Server.Models;
 
 public class User : IdentityUser
 {
+
     [Required]
     [MaxLength(255)]
     public string FirstName { get; set; }
@@ -14,7 +15,8 @@ public class User : IdentityUser
     [Required]
     [MaxLength(255)]
     public string LastName { get; set; }
-    
+
+
     [Required]
     public AvailabilityStatus AvailabilityStatus { get; set; }
     
@@ -26,4 +28,9 @@ public class User : IdentityUser
     
     // Navigation Properties
     public ICollection<Order> Orders { get; set; }
+
+    public ICollection<Appointment>? Appointments { get; set; }
+
+    public ICollection<Service>? Services {  get; set; } // changed so a user (employee) can have multiple services to offer
+                                                         // hairdresser can do haircut, hairstyle, beard trim, hair dying, etc.
 }
