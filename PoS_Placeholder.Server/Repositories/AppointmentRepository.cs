@@ -28,7 +28,7 @@ public class AppointmentRepository : Repository<Appointment>
     public async Task<IEnumerable<Appointment>> GetAppointmentsByBusinessIdAsync(int businessId, DateTime startDate)
     {
         return await _db.Appointments
-            .Where(o => o.BusinessId == businessId && o.TimeReserved >= startDate).ToListAsync();
+            .Where(o => o.BusinessId == businessId && DateTime.Parse(o.TimeReserved) > startDate).ToListAsync();
     }
 
     public async Task<IEnumerable<Appointment>> GetAppointmentsByBusinessIdAsync(int businessId, DateTime? startDate, DateTime endDate)
@@ -36,12 +36,12 @@ public class AppointmentRepository : Repository<Appointment>
         if(startDate == null)
         {
             return await _db.Appointments
-                .Where(o => o.BusinessId == businessId && o.TimeReserved < endDate).ToListAsync();
+                .Where(o => o.BusinessId == businessId && DateTime.Parse(o.TimeReserved) < endDate).ToListAsync();
         }
         else
         {
             return await _db.Appointments
-                .Where(o => o.BusinessId == businessId && o.TimeReserved >= startDate && o.TimeReserved < endDate).ToListAsync();
+                .Where(o => o.BusinessId == businessId && DateTime.Parse(o.TimeReserved) >= startDate && DateTime.Parse(o.TimeReserved) < endDate).ToListAsync();
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 using System.Xml;
 
 namespace PoS_Placeholder.Server.Models;
@@ -10,10 +11,11 @@ public class Appointment
     public int Id { get; set; }
     
     [Required]
-    public DateTime TimeCreated { get; set; }
+    public string TimeCreated { get; set; }
+    public string? TimeUpdated { get; set; }
 
     [Required]
-    public DateTime TimeReserved { get; set; }
+    public string TimeReserved { get; set; }
 
     [Required]
     [MaxLength(255)]
@@ -27,6 +29,7 @@ public class Appointment
     public int BusinessId { get; set; } // added for convenience, not in line with spec
 
     [Required]
+    [JsonIgnore]
     [ForeignKey("BusinessId")]
     public Business Business { get; set; }
 
@@ -34,6 +37,7 @@ public class Appointment
     public string UserId { get; set; }
 
     [Required]
+    [JsonIgnore]
     [ForeignKey("UserId")]
     public User User { get; set; }
 
@@ -41,6 +45,7 @@ public class Appointment
     public int ServiceId { get; set; }
 
     [Required]
+    [JsonIgnore]
     [ForeignKey("ServiceId")]
     public Service Service { get; set; }
 

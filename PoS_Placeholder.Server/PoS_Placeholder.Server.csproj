@@ -40,7 +40,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Update="locale.json">
+    <Content Update="dateLocale.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="taxLocale.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

@@ -13,12 +13,12 @@ public class Repository<T> where T : class
         _db = db;
     }
     
-    public T GetById(int id)
+    public T GetById<TId>(TId id)
     {
         return _db.Set<T>().Find(id);
     }
     
-    public async Task<T?> GetByIdAsync(int id)
+    public async Task<T?> GetByIdAsync<TId>(TId id)
     {
         return await _db.Set<T>().FindAsync(id);
     }

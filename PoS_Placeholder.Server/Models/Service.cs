@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 using System.Xml;
 
 namespace PoS_Placeholder.Server.Models;
@@ -22,18 +23,21 @@ public class Service
                                            // allows service charge to be a flat value or a percentage
                                            // percentage can be used to charge for servicing a table in a restaurant
 
-    [Required]
-    public uint Duration { get; set; }
+    public uint? Duration { get; set; }
 
     [Required]
     public int BusinessId { get; set; }
-    
+
+    [Required]
+    [JsonIgnore]
     [ForeignKey("BusinessId")]
     public Business Business { get; set; }
 
     [Required]
     public string UserId { get; set; }
 
+    [Required]
+    [JsonIgnore]
     [ForeignKey("UserId")]
     public User User { get; set; }
 }

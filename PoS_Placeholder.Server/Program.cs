@@ -36,10 +36,13 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 });
 
 builder.Services.AddScoped<ProductRepository>();
+builder.Services.AddScoped<ServiceRepository>();
+builder.Services.AddScoped<AppointmentRepository>();
 builder.Services.AddScoped<ProductVariationRepository>();
 builder.Services.AddScoped<OrderRepository>();
 builder.Services.AddScoped<DiscountRepository>();
 builder.Services.AddScoped<GiftcardRepository>();
+builder.Services.AddScoped<UserRepository>();
 
 builder.Logging.AddLogger(configuration =>
 {
@@ -62,8 +65,14 @@ builder.Services.AddSingleton<IImageService>(provider =>
 
 builder.Services.AddSingleton<ITaxService>(provider =>
 {
-    var filePath = Path.Combine(AppContext.BaseDirectory, "locale.json");
+    var filePath = Path.Combine(AppContext.BaseDirectory, "taxLocale.json");
     return new TaxService(filePath);
+});
+
+builder.Services.AddSingleton<IDateTimeService>(provider =>
+{
+    var filePath = Path.Combine(AppContext.BaseDirectory, "dateLocale.json");
+    return new DateTimeService(filePath);
 });
 
 builder.Services.AddIdentity<User, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
