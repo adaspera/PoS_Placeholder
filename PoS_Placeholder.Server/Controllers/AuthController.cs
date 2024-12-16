@@ -5,6 +5,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using PoS_Placeholder.Server.Data;
 using PoS_Placeholder.Server.Models;
@@ -258,12 +259,15 @@ public class AuthController : ControllerBase
         SecurityToken securityToken = tokenHandler.CreateToken(securityTokenDescriptor);
         string token = tokenHandler.WriteToken(securityToken);
 
+        var business = await _db.Businesses.FindAsync(userFromDb.BusinessId);
+
         LoginResponseDto loginResponse = new()
         {
             Email = userFromDb.Email,
             AuthToken = token,
             Role = role,
             BusinessId = userFromDb.BusinessId,
+            Currency = business.Region
         };
         
         _apiResponse.StatusCode = HttpStatusCode.OK;

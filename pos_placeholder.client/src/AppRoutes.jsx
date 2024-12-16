@@ -2,7 +2,7 @@
 import Business from "@/components/Business.jsx";
 import Products from "@/components/Products.jsx";
 import Orders from "@/components/Orders.jsx";
-import Tax from "@/components/Tax.jsx";
+import Discount from "@/components/Discount.jsx";
 
 
 const AppRoutes = [
@@ -16,7 +16,7 @@ const AppRoutes = [
     },
     {
         path: '/tax',
-        element: <Tax />
+        element: <Discount />
     },
     {
         path: '/products',

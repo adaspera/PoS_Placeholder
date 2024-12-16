@@ -1,15 +1,15 @@
 ﻿{
   "USA": {
-    "currency": "USD",
-    "taxes": [
-      { "nameOfTax": "VAT", "taxAmount": 10.00, "isPercentage": true },
-      { "nameOfTax": "Excise Duty", "taxAmount": 5.00, "isPercentage": true }
+    "Currency": "USD",
+    "Taxes": [
+      { "NameOfTax": "VAT", "TaxAmount": 10.00, "IsPercentage": true },
+      { "NameOfTax": "Excise Duty", "TaxAmount": 5.00, "IsPercentage": true }
     ]
   },
   "LIT": {
-    "currency": "EUR",
-    "taxes": [
-      { "nameOfTax": "VAT", "taxAmount": 21.00, "isPercentage": true }
+    "Currency": "EUR",
+    "Taxes": [
+      { "NameOfTax": "VAT", "TaxAmount": 21.00, "IsPercentage": true }
     ]
   }
 }

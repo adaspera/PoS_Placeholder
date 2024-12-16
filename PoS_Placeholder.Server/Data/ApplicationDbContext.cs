@@ -18,6 +18,11 @@ public class ApplicationDbContext : IdentityDbContext<User>
     public DbSet<ProductVariation> ProductVariations { get; set; }
     public DbSet<Order> Orders { get; set; }
     public DbSet<ProductArchive> ProductsArchive { get; set; }
+    public DbSet<TaxArchive> TaxesArchive { get; set; }
+    public DbSet<DiscountArchive> DiscountsArchives { get; set; }
+    public DbSet<Discount> Discounts { get; set; }
+    public DbSet<Giftcard> Giftcards { get; set; }
+    public DbSet<PaymentArchive> PaymentsArchive  { get; set; }
     public DbSet<Service> Services { get; set; }
     public DbSet<ServiceArchive> ServicesArchive { get; set; }
     public DbSet<Appointment> Appointments { get; set; }

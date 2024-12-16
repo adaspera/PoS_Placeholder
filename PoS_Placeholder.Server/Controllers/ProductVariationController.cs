@@ -27,6 +27,24 @@ public class ProductVariationController : ControllerBase
         _imageService = imageService;
     }
 
+    
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> GetAllProductVariations()
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null)
+        {
+            return Unauthorized("User not found.");
+        }
+
+        var userBusinessId = user.BusinessId;
+
+        var productVariations = await _variationRepository.GetWhereAsync(variation => variation.Product.BusinessId == userBusinessId);
+         
+        return Ok(productVariations);
+    }
+    
     [HttpGet("{id:int}", Name = "GetAllProductVariationsById")]
     [Authorize]
     public async Task<IActionResult> GetAllProductVariationsById(int id)
@@ -56,8 +74,7 @@ public class ProductVariationController : ControllerBase
 
     [HttpPost]
     [Authorize(Roles = nameof(UserRole.Owner))]
-    public async Task<IActionResult> CreateProductVariation(
-        [FromForm] CreateProductVariationDto createProductVariationDto)
+    public async Task<IActionResult> CreateProductVariation([FromForm] CreateProductVariationDto createProductVariationDto)
     {
         try
         {
@@ -104,8 +121,7 @@ public class ProductVariationController : ControllerBase
 
     [HttpPut]
     [Authorize(Roles = nameof(UserRole.Owner))]
-    public async Task<IActionResult> UpdateProductVariation(
-        [FromForm] UpdateProductVariationDto updateProductVariationDto)
+    public async Task<IActionResult> UpdateProductVariation([FromForm] UpdateProductVariationDto updateProductVariationDto)
     {
         try
         {
@@ -129,7 +145,7 @@ public class ProductVariationController : ControllerBase
             }
 
             var product = await _productRepository.GetByIdAsync(updateProductVariationDto.ProductId);
-            if (productVariation == null)
+            if (product == null)
             {
                 return NotFound("Product not found.");
             }
@@ -145,10 +161,8 @@ public class ProductVariationController : ControllerBase
                 string oldFileName = productVariation.PictureUrl.Split('/').Last();
                 await _imageService.DeleteFileBlobAsync(oldFileName);
 
-                string newFileName =
-                    $"{Guid.NewGuid()}{Path.GetExtension(updateProductVariationDto.PictureFile.FileName)}";
-                string pictureUrl =
-                    await _imageService.UploadFileBlobAsync(newFileName, updateProductVariationDto.PictureFile);
+                string newFileName = $"{Guid.NewGuid()}{Path.GetExtension(updateProductVariationDto.PictureFile.FileName)}";
+                string pictureUrl = await _imageService.UploadFileBlobAsync(newFileName, updateProductVariationDto.PictureFile);
 
                 productVariation.PictureUrl = pictureUrl;
             }
@@ -166,8 +180,7 @@ public class ProductVariationController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(StatusCodes.Status500InternalServerError,
-                $"Error: {ex.Message}, StackTrace: {ex.StackTrace}");
+            return StatusCode(StatusCodes.Status500InternalServerError, $"Error: {ex.Message}, StackTrace: {ex.StackTrace}");
         }
     }
 

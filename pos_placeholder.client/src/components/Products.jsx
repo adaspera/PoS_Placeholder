@@ -12,6 +12,7 @@ import {
 } from "reactstrap";
 import * as ProductApi from "@/api/productApi.jsx";
 import ProductVariationForm from "@/components/shared/ProductVariationForm.jsx";
+import {getCurrency} from "@/helpers/currencyUtils.jsx";
 
 const Products = () => {
     const [isLoading, setIsLoading] = useState(true);
@@ -44,7 +45,7 @@ const Products = () => {
 
 
     useEffect( () => {
-        fetchProducts()
+        fetchProducts();
     },[]);
 
     const toggleAccordion = async (id) => {
@@ -105,6 +106,7 @@ const Products = () => {
 
 
     const handleAddVariation = async (productId, formData) => {
+        formData.append("productId", productId);
         const createdVariation = await ProductApi.addProductVariation(formData);
         setVariations([...variations, createdVariation]);
         setIsAddVariationFormOpen(false);
@@ -207,7 +209,7 @@ const Products = () => {
                                                 />
                                             </Col>
                                             <Col>
-                                                <span>{variation.name} - ${variation.price} | Stock: {variation.inventoryQuantity}</span>
+                                                <span>{variation.name} - {getCurrency()}{variation.price} | Stock: {variation.inventoryQuantity}</span>
                                             </Col>
                                             <Col xs="auto">
                                                 <Button

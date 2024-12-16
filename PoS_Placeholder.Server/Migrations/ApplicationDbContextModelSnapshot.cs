@@ -200,7 +200,150 @@ namespace PoS_Placeholder.Server.Migrations
 
                     b.HasKey("Id");
 
+                    b.ToTable("Businesses");
+                });
+
+            modelBuilder.Entity("PoS_Placeholder.Server.Models.Discount", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("BusinessId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsPercentage")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BusinessId");
+
+                    b.ToTable("Discounts");
+                });
+
+            modelBuilder.Entity("PoS_Placeholder.Server.Models.DiscountArchive", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<bool>("IsPercentage")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ProductFullName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("DiscountsArchives");
+                });
+
+            modelBuilder.Entity("PoS_Placeholder.Server.Models.Giftcard", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<decimal>("Balance")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("BusinessId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BusinessId");
+
+                    b.ToTable("Giftcards");
+                });
+
+            modelBuilder.Entity("PoS_Placeholder.Server.Models.Order", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BusinessId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("Tip")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BusinessId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Orders");
+
                     b.ToTable("Businesses", (string)null);
+
+                });
+
+            modelBuilder.Entity("PoS_Placeholder.Server.Models.PaymentArchive", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("GiftCardId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Method")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("PaidPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("PaymentIntentId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("PaymentsArchive");
                 });
 
             modelBuilder.Entity("PoS_Placeholder.Server.Models.Product", b =>
@@ -239,6 +382,9 @@ namespace PoS_Placeholder.Server.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("DiscountId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -256,9 +402,40 @@ namespace PoS_Placeholder.Server.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("DiscountId");
+
                     b.HasIndex("ProductId");
 
                     b.ToTable("ProductVariations", (string)null);
+                });
+
+            modelBuilder.Entity("PoS_Placeholder.Server.Models.TaxArchive", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsPercentage")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("TaxAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("TaxesArchive");
                 });
 
             modelBuilder.Entity("PoS_Placeholder.Server.Models.User", b =>
@@ -395,6 +572,70 @@ namespace PoS_Placeholder.Server.Migrations
                         .IsRequired();
                 });
 
+
+            modelBuilder.Entity("PoS_Placeholder.Server.Models.Discount", b =>
+                {
+                    b.HasOne("PoS_Placeholder.Server.Models.Business", "Business")
+                        .WithMany()
+                        .HasForeignKey("BusinessId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Business");
+                });
+
+            modelBuilder.Entity("PoS_Placeholder.Server.Models.DiscountArchive", b =>
+                {
+                    b.HasOne("PoS_Placeholder.Server.Models.Order", "Order")
+                        .WithMany("Discounts")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+                });
+
+            modelBuilder.Entity("PoS_Placeholder.Server.Models.Giftcard", b =>
+                {
+                    b.HasOne("PoS_Placeholder.Server.Models.Business", "Business")
+                        .WithMany("Giftcards")
+                        .HasForeignKey("BusinessId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Business");
+                });
+
+            modelBuilder.Entity("PoS_Placeholder.Server.Models.Order", b =>
+                {
+                    b.HasOne("PoS_Placeholder.Server.Models.Business", "Business")
+                        .WithMany("Orders")
+                        .HasForeignKey("BusinessId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PoS_Placeholder.Server.Models.User", "User")
+                        .WithMany("Orders")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Business");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("PoS_Placeholder.Server.Models.PaymentArchive", b =>
+                {
+                    b.HasOne("PoS_Placeholder.Server.Models.Order", "Order")
+                        .WithMany("Payments")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+                });
+
             modelBuilder.Entity("PoS_Placeholder.Server.Models.Product", b =>
                 {
                     b.HasOne("PoS_Placeholder.Server.Models.Business", "Business")
@@ -408,13 +649,31 @@ namespace PoS_Placeholder.Server.Migrations
 
             modelBuilder.Entity("PoS_Placeholder.Server.Models.ProductVariation", b =>
                 {
+                    b.HasOne("PoS_Placeholder.Server.Models.Discount", "Discount")
+                        .WithMany()
+                        .HasForeignKey("DiscountId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("PoS_Placeholder.Server.Models.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("Discount");
+
                     b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("PoS_Placeholder.Server.Models.TaxArchive", b =>
+                {
+                    b.HasOne("PoS_Placeholder.Server.Models.Order", "Order")
+                        .WithMany("Taxes")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Order");
                 });
 
             modelBuilder.Entity("PoS_Placeholder.Server.Models.User", b =>
@@ -430,9 +689,34 @@ namespace PoS_Placeholder.Server.Migrations
 
             modelBuilder.Entity("PoS_Placeholder.Server.Models.Business", b =>
                 {
+                    b.Navigation("Giftcards");
+
+                    b.Navigation("Orders");
+
                     b.Navigation("Products");
 
                     b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("PoS_Placeholder.Server.Models.Order", b =>
+                {
+                    b.Navigation("Discounts");
+
+                    b.Navigation("Payments");
+
+                    b.Navigation("Products");
+
+                    b.Navigation("Taxes");
+                });
+
+            modelBuilder.Entity("PoS_Placeholder.Server.Models.Product", b =>
+                {
+                    b.Navigation("ProductVariations");
+                });
+
+            modelBuilder.Entity("PoS_Placeholder.Server.Models.User", b =>
+                {
+                    b.Navigation("Orders");
                 });
 #pragma warning restore 612, 618
         }

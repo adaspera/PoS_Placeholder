@@ -32,6 +32,8 @@ public class Order
     
     // Navigation Properties
     public ICollection<ProductArchive> Products { get; set; }
-
+    public ICollection<TaxArchive> Taxes { get; set; }
+    public ICollection<DiscountArchive> Discounts { get; set; }
+    public ICollection<PaymentArchive> Payments { get; set; }
     public ICollection<ServiceArchive>? Services { get; set; }   
 }
