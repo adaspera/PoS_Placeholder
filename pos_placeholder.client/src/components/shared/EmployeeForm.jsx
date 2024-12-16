@@ -6,9 +6,10 @@ const EmployeeForm = ({ onSubmit, credentials, formId = '0' }) => {
 
     const handleInputChange = (e) => {
         const { id, value } = e.target;
+        const field = id.replace(formId, "");
         setNewCredentials((prevState) => ({
             ...prevState,
-            [id]: value,
+            [field]: value,
         }));
     };
 
@@ -33,13 +34,12 @@ const EmployeeForm = ({ onSubmit, credentials, formId = '0' }) => {
                                 .replace(/([A-Z])/g, " $1")
                                 .toLowerCase()}`}
                             type={key.includes("password") || key.includes("confirmPassword") ? "password" : "text"}
-                            required
                         />
                     </FormGroup>
                 ))}
             <Row className="d-flex justify-content-center align-items-center">
                 <Button color="success" className="me-3 w-25" type="submit">
-                    Create
+                    Submit
                 </Button>
                 <Button color="danger" className="w-25" onClick={() => setNewCredentials(credentials)}>
                     Clear

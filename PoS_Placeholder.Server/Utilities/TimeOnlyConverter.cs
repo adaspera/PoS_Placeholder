@@ -6,26 +6,21 @@ namespace PoS_Placeholder.Server.Utilities
 {
     public class TimeOnlyConverter : JsonConverter<TimeOnly>
     {
+        private const string TimeFormat = "HH:mm";
+
         public override TimeOnly Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            // Read the JSON object as a JsonElement
-            var jsonObject = JsonDocument.ParseValue(ref reader).RootElement;
-
-            // Extract the "hour" and "minute" properties
-            var hour = jsonObject.GetProperty("hour").GetInt32();
-            var minute = jsonObject.GetProperty("minute").GetInt32();
-
-            // Return a TimeOnly object based on the hour and minute
-            return new TimeOnly(hour, minute);
+            string? timeStr = reader.GetString();
+            if (TimeOnly.TryParseExact(timeStr, TimeFormat, out TimeOnly time))
+            {
+                return time;
+            }
+            throw new JsonException("Unable to convert to TimeOnly from provided JSON value.");
         }
 
         public override void Write(Utf8JsonWriter writer, TimeOnly value, JsonSerializerOptions options)
         {
-            // Write the TimeOnly object as a JSON object with "hour" and "minute"
-            writer.WriteStartObject();
-            writer.WriteNumber("hour", value.Hour);
-            writer.WriteNumber("minute", value.Minute);
-            writer.WriteEndObject();
+            writer.WriteStringValue(value.ToString(TimeFormat));
         }
     }
 }

@@ -1,12 +1,12 @@
 import { apiService } from "./ApiService";
 
 export const getAllEmployees = async () => {
-    return testUsers;
-    // try {
-    //     return await apiService.get("/api/user");
-    // } catch (e) {
-    //     console.error("Error fetching employees:", e);
-    // }
+    //return testUsers;
+    try {
+        return await apiService.get("/api/business/employees");
+    } catch (e) {
+        console.error("Error fetching employees:", e);
+    }
 };
 
 export const getEmployee = async (id) => {
@@ -25,28 +25,53 @@ export const registerEmployee = async (employee) => {
     }
 };
 
-export const updateEmployee = async (id) => {
-
+export const updateEmployee = async (employee) => {
+    try {
+        return await apiService.put("/api/business/employees", employee);
+    } catch (e) {
+        console.error("Error updating employee:", e);
+    }
 };
 
 export const deleteEmployee = async (id) => {
-
+    try {
+        return await apiService.delete(`/api/business/employees/${id}`);
+    } catch (e) {
+        console.error("Error deleting employee:", e);
+    }
 };
 
 export const getWorkTimes = async (id) => {
-    return userWorkTimes;
+    //return userWorkTimes;
+    try {
+        return await apiService.get(`/api/business/users/${id}/schedules`);
+    } catch (e) {
+        console.error("Error getting work times:", e);
+    }
 };
 
 export const createWorkTime = async (workTime) => {
-
+    try {
+        return await apiService.post(`/api/business/users/${workTime.userId}/schedule`, workTime);
+    } catch (e) {
+        console.error("Error creating work time:", e);
+    }
 };
 
-export const updateWorkTimes = async (workTimes) => {
-
+export const updateWorkTime = async (workTime) => {
+    try {
+        return await apiService.put(`/api/business/users/${workTime.userId}/schedule/${workTime.id}`, workTime);
+    } catch (e) {
+        console.error("Error updating work time:", e);
+    }
 };
 
 export const deleteWorkTime = async (workTime) => {
-
+    try {
+        return await apiService.delete(`/api/business/users/${workTime.userId}/schedule/${workTime.id}`);
+    } catch (e) {
+        console.error("Error getting work times:", e);
+    }
 };
 
 const testUsers = [

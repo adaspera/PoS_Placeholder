@@ -5,6 +5,8 @@ namespace PoS_Placeholder.Server.Models.Dto;
 
 public class UpdateEmployeeDto
 {
+    [Key]
+    public string Id { get; set; }
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
     public AvailabilityStatus? AvailabilityStatus { get; set; }

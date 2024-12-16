@@ -59,8 +59,12 @@ const Business = () => {
     const handleRegisterEmployee = async (credentials) => {
         try {
             const response = await businessApi.registerEmployee(credentials);
-            if (!response.isSuccess)
+            if (response.isSuccess){
+                setEmployees([...employees, response.data]);
+            }
+            else {
                 alert("Registration failed.");
+            }
         } catch (err) {
             alert("Register failed. Please check your credentials.");
             console.log(err);
@@ -78,38 +82,39 @@ const Business = () => {
         return {
             firstName: employee.firstName,
             lastName: employee.lastName,
-            phone: employee.phone,
+            phoneNumber: employee.phoneNumber,
             email: employee.email,
             status: employee.status
         }
     }
 
-    const handleUpdateWorkTimes = async () => {
+    const handleCloseModal = async () => {
         setSelectedWorkTime(null);
-        await businessApi.updateWorkTimes(scheduleModalOpenFor, workTimes);
         setScheduleModalOpenFor(null);
     };
 
-    const handleCancelUpdateWorkTimes = async () => {
-        setSelectedWorkTime(null);
-        // Nesmerkit tingiu galvot
-        await businessApi.getWorkTimes(scheduleModalOpenFor);
-        setScheduleModalOpenFor(null);
+    //kad nesitrainiot su laiko juostom
+    function toUtcMidnightIsoDate(localDate) {
+        localDate.setHours(12);
+        const isoDate = localDate.toISOString().split('T')[0] + 'T00:00:00Z';
+        return isoDate;
     }
 
     const handleWorkTimeDateSelection = (date) => {
         const selected = workTimes.find(wt => new Date(wt.day).toDateString() === date.toDateString());
+        const isoDate = toUtcMidnightIsoDate(date);
 
         if (selected) {
             setSelectedWorkTime({
                 ...selected,
+                day: isoDate,
                 breakStart: selected.breakStart || "", // It doesn't clear it otherwise for some reason
                 breakEnd: selected.breakEnd || ""
             });
         } else {
             setSelectedWorkTime({
-                employeeId: scheduleModalOpenFor,
-                day: date,
+                userId: scheduleModalOpenFor,
+                day: isoDate,
                 startTime: "",
                 endTime: "",
                 breakStart: "",
@@ -118,27 +123,35 @@ const Business = () => {
         }
     };
 
-    const addWorkTime = () => {
-        if (selectedWorkTime.endTime === "" || selectedWorkTime.startTime === "") {
-            alert("Please select both work times");
+    const addWorkTime = async () => {
+        if (selectedWorkTime.endTime === "" || selectedWorkTime.startTime === ""
+            || selectedWorkTime.breakStart === "" || selectedWorkTime.breakEnd === "") {
+            alert("Please select all times");
         } else {
             const existingWorkTimeIndex = workTimes.findIndex(
                 (wt) => new Date(wt.day).toDateString() === new Date(selectedWorkTime.day).toDateString()
             );
 
             if (existingWorkTimeIndex !== -1) {
+                console.log(selectedWorkTime);
+                const newWorkTime = await businessApi.updateWorkTime(selectedWorkTime);
+                console.log(newWorkTime);
                 const updatedWorkTimes = [...workTimes];
-                updatedWorkTimes[existingWorkTimeIndex] = selectedWorkTime;
+                updatedWorkTimes[existingWorkTimeIndex] = newWorkTime;
                 setWorkTimes(updatedWorkTimes);
             } else {
-                setWorkTimes([...workTimes, selectedWorkTime]);
+                console.log(selectedWorkTime);
+                const newWorkTime = await businessApi.createWorkTime(selectedWorkTime);
+                console.log(newWorkTime);
+                setWorkTimes([...workTimes, newWorkTime]);
             }
             setSelectedWorkTime(null);
         }
     };
 
-    const removeWorkTime = (day) => {
-        setWorkTimes(workTimes.filter(wt => new Date(wt.day).toDateString() !== new Date(day).toDateString()));
+    const removeWorkTime = async () => {
+        await businessApi.deleteWorkTime(selectedWorkTime);
+        setWorkTimes(workTimes.filter(wt => wt.id !== selectedWorkTime.id));
         setSelectedWorkTime(null);
     };
 
@@ -184,7 +197,7 @@ const Business = () => {
                             />
                         </FormGroup>
                         <FormGroup>
-                            <Label for="breakEnd">Break start</Label>
+                            <Label for="breakEnd">Break end</Label>
                             <Input
                                 id="breakEnd"
                                 type="time"
@@ -196,15 +209,12 @@ const Business = () => {
                 )}
                 <div className="mt-3">
                     <Button color="primary" className="me-3" onClick={addWorkTime}>Save day</Button>
-                    <Button color="secondary" onClick={() => removeWorkTime(selectedWorkTime?.day)}>Remove day</Button>
+                    <Button color="secondary" onClick={() => removeWorkTime()}>Remove day</Button>
                 </div>
             </ModalBody>
             <ModalFooter>
-                <Button color="secondary" onClick={() => handleCancelUpdateWorkTimes()}>
-                    Cancel
-                </Button>
-                <Button color="primary" onClick={handleUpdateWorkTimes}>
-                    Save
+                <Button color="secondary" onClick={() => handleCloseModal()}>
+                    Close
                 </Button>
             </ModalFooter>
         </Modal>

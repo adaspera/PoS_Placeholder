@@ -96,6 +96,7 @@ public class AuthController : ControllerBase
                 // Set newUser role to employee
                 await _userManager.AddToRoleAsync(newEmployee, UserRole.Employee.ToString());
 
+                _apiResponse.Data = newEmployee;
                 _apiResponse.StatusCode = HttpStatusCode.OK;
                 return Ok(_apiResponse);
             }
