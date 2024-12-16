@@ -7,9 +7,6 @@ namespace PoS_Placeholder.Server.Models;
 
 public class User : IdentityUser
 {
-    // is not up to specification
-    // refer to pdf pg. 19 User table
-
 
     [Required]
     [MaxLength(255)]
@@ -34,6 +31,6 @@ public class User : IdentityUser
 
     public ICollection<Appointment>? Appointments { get; set; }
 
-    public ICollection<Service>? Services {  get; set; } // changed to a user (employee) can have multiple services to offer
+    public ICollection<Service>? Services {  get; set; } // changed so a user (employee) can have multiple services to offer
                                                          // hairdresser can do haircut, hairstyle, beard trim, hair dying, etc.
 }

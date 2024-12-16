@@ -33,5 +33,5 @@ public class Order
     // Navigation Properties
     public ICollection<ProductArchive> Products { get; set; }
 
-    public ICollection<ServiceArchive> Services { get; set; }   
+    public ICollection<ServiceArchive>? Services { get; set; }   
 }

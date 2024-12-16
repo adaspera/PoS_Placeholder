@@ -50,6 +50,11 @@ public class ApplicationDbContext : IdentityDbContext<User>
             .HasOne(o => o.Business)
             .WithMany(b => b.Services)
             .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ServiceArchive>()
+            .HasOne(o => o.Order)
+            .WithMany(b => b.Services)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
 

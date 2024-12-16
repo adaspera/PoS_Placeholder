@@ -155,51 +155,6 @@ namespace PoS_Placeholder.Server.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("PoS_Placeholder.Server.Models.Appointment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("BusinessId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("CustomerName")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("CustomerPhone")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
-
-                    b.Property<int>("ServiceId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("TimeCreated")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("TimeReserved")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BusinessId");
-
-                    b.HasIndex("ServiceId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Appointments");
-                });
-
             modelBuilder.Entity("PoS_Placeholder.Server.Models.Business", b =>
                 {
                     b.Property<int>("Id")
@@ -245,40 +200,7 @@ namespace PoS_Placeholder.Server.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Businesses");
-                });
-
-            modelBuilder.Entity("PoS_Placeholder.Server.Models.Order", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("BusinessId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<decimal?>("Tip")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BusinessId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Orders");
+                    b.ToTable("Businesses", (string)null);
                 });
 
             modelBuilder.Entity("PoS_Placeholder.Server.Models.Product", b =>
@@ -306,36 +228,7 @@ namespace PoS_Placeholder.Server.Migrations
 
                     b.HasIndex("BusinessId");
 
-                    b.ToTable("Products");
-                });
-
-            modelBuilder.Entity("PoS_Placeholder.Server.Models.ProductArchive", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("FullName")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<int>("OrderId")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OrderId");
-
-                    b.ToTable("ProductsArchive");
+                    b.ToTable("Products", (string)null);
                 });
 
             modelBuilder.Entity("PoS_Placeholder.Server.Models.ProductVariation", b =>
@@ -365,74 +258,7 @@ namespace PoS_Placeholder.Server.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("ProductVariations");
-                });
-
-            modelBuilder.Entity("PoS_Placeholder.Server.Models.Service", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("BusinessId")
-                        .HasColumnType("int");
-
-                    b.Property<long>("Duration")
-                        .HasColumnType("bigint");
-
-                    b.Property<bool>("IsPercentage")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<decimal>("ServiceCharge")
-                        .HasColumnType("decimal(10,2)");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BusinessId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Services");
-                });
-
-            modelBuilder.Entity("PoS_Placeholder.Server.Models.ServiceArchive", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("IsPercentage")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<int>("OrderId")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OrderId");
-
-                    b.ToTable("ServicesArchive");
+                    b.ToTable("ProductVariations", (string)null);
                 });
 
             modelBuilder.Entity("PoS_Placeholder.Server.Models.User", b =>
@@ -569,52 +395,6 @@ namespace PoS_Placeholder.Server.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("PoS_Placeholder.Server.Models.Appointment", b =>
-                {
-                    b.HasOne("PoS_Placeholder.Server.Models.Business", "Business")
-                        .WithMany()
-                        .HasForeignKey("BusinessId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("PoS_Placeholder.Server.Models.Service", "Service")
-                        .WithMany()
-                        .HasForeignKey("ServiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("PoS_Placeholder.Server.Models.User", "User")
-                        .WithMany("Appointments")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Business");
-
-                    b.Navigation("Service");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("PoS_Placeholder.Server.Models.Order", b =>
-                {
-                    b.HasOne("PoS_Placeholder.Server.Models.Business", "Business")
-                        .WithMany("Orders")
-                        .HasForeignKey("BusinessId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("PoS_Placeholder.Server.Models.User", "User")
-                        .WithMany("Orders")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Business");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("PoS_Placeholder.Server.Models.Product", b =>
                 {
                     b.HasOne("PoS_Placeholder.Server.Models.Business", "Business")
@@ -626,56 +406,15 @@ namespace PoS_Placeholder.Server.Migrations
                     b.Navigation("Business");
                 });
 
-            modelBuilder.Entity("PoS_Placeholder.Server.Models.ProductArchive", b =>
-                {
-                    b.HasOne("PoS_Placeholder.Server.Models.Order", "Order")
-                        .WithMany("Products")
-                        .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Order");
-                });
-
             modelBuilder.Entity("PoS_Placeholder.Server.Models.ProductVariation", b =>
                 {
                     b.HasOne("PoS_Placeholder.Server.Models.Product", "Product")
-                        .WithMany("ProductVariations")
+                        .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Product");
-                });
-
-            modelBuilder.Entity("PoS_Placeholder.Server.Models.Service", b =>
-                {
-                    b.HasOne("PoS_Placeholder.Server.Models.Business", "Business")
-                        .WithMany("Services")
-                        .HasForeignKey("BusinessId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("PoS_Placeholder.Server.Models.User", "User")
-                        .WithMany("Services")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Business");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("PoS_Placeholder.Server.Models.ServiceArchive", b =>
-                {
-                    b.HasOne("PoS_Placeholder.Server.Models.Order", "Order")
-                        .WithMany()
-                        .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Order");
                 });
 
             modelBuilder.Entity("PoS_Placeholder.Server.Models.User", b =>
@@ -691,32 +430,9 @@ namespace PoS_Placeholder.Server.Migrations
 
             modelBuilder.Entity("PoS_Placeholder.Server.Models.Business", b =>
                 {
-                    b.Navigation("Orders");
-
                     b.Navigation("Products");
-
-                    b.Navigation("Services");
 
                     b.Navigation("Users");
-                });
-
-            modelBuilder.Entity("PoS_Placeholder.Server.Models.Order", b =>
-                {
-                    b.Navigation("Products");
-                });
-
-            modelBuilder.Entity("PoS_Placeholder.Server.Models.Product", b =>
-                {
-                    b.Navigation("ProductVariations");
-                });
-
-            modelBuilder.Entity("PoS_Placeholder.Server.Models.User", b =>
-                {
-                    b.Navigation("Appointments");
-
-                    b.Navigation("Orders");
-
-                    b.Navigation("Services");
                 });
 #pragma warning restore 612, 618
         }
