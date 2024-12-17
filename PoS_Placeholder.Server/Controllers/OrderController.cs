@@ -22,9 +22,10 @@ public class OrderController : ControllerBase
     private readonly GiftcardRepository _giftcardRepository;
     private readonly ITaxService _taxService;
     private readonly ApplicationDbContext _db;
+    private readonly ILogger<OrderController> _logger;
 
     public OrderController(UserManager<User> userManager, OrderRepository orderRepository, ITaxService taxService,
-        ApplicationDbContext db, DiscountRepository discountRepository, GiftcardRepository giftcardRepository)
+        ApplicationDbContext db, DiscountRepository discountRepository, GiftcardRepository giftcardRepository, ILogger<OrderController> logger)
     {
         _userManager = userManager;
         _orderRepository = orderRepository;
@@ -32,6 +33,7 @@ public class OrderController : ControllerBase
         _giftcardRepository = giftcardRepository;
         _taxService = taxService;
         _db = db;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -63,6 +65,9 @@ public class OrderController : ControllerBase
 
             var totalPrice = subTotal + taxesTotal + (order.Tip ?? 0m) - discountsTotal;
             totalPrice = Math.Round(totalPrice, 2);
+            
+            _logger.LogInformation("In Get All Orders: ");
+            _logger.LogInformation($"Tip: {order.Tip}, SubTotal: {subTotal}, TaxesTotal: {taxesTotal}, DiscountsTotal: {discountsTotal} Total: {totalPrice}");
 
             return new OrderResponseDto
             {
@@ -169,8 +174,8 @@ public class OrderController : ControllerBase
             if (discount != null)
             {
                 discountsTotal += discount.IsPercentage
-                    ? productVariation.Price * discount.Amount / 100
-                    : discount.Amount;
+                    ? productVariation.Price * orderItem.Quantity * discount.Amount / 100
+                    : discount.Amount * orderItem.Quantity;
             }
 
             subTotal += productVariation.Price * orderItem.Quantity;
@@ -206,6 +211,9 @@ public class OrderController : ControllerBase
         var tip = createOrderDto.Tip ?? 0.00m;
         tip = Math.Round(tip, 2);
         decimal total = subTotal + taxesTotal + tip - discountsTotal;
+        
+        _logger.LogInformation("In preview order:");
+        _logger.LogInformation($"Tip: {tip}, Subtotal: {subTotal}, TaxesTotal: {taxesTotal}, Discount: {discountsTotal}");
 
         var orderPreviewDto = new OrderPreviewDto
         {
@@ -287,8 +295,8 @@ public class OrderController : ControllerBase
                     if (discount != null)
                     {
                         discountsTotal += discount.IsPercentage
-                            ? productVariation.Price * discount.Amount / 100m
-                            : discount.Amount;
+                            ? productVariation.Price * orderItem.Quantity * discount.Amount / 100m
+                            : discount.Amount * orderItem.Quantity;
 
                         var discountArchive = new DiscountArchive()
                         {
@@ -401,6 +409,9 @@ public class OrderController : ControllerBase
 
                 // transaction commited -> everything commited to db after this point
                 await transaction.CommitAsync();
+                
+                _logger.LogInformation("In create order:");
+                _logger.LogInformation($"Tip: {tip}, Subtotal: {subtotal}, TaxesTotal: {taxesTotal}, Discount: {discountsTotal}, grandTotal: {grandTotal}");
 
                 var orderResponseDto = new OrderResponseDto
                 {

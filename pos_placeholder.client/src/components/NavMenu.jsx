@@ -38,6 +38,10 @@ const NavMenu = ({ onLogout }) => {
                             <i className="bi-receipt" style={{fontSize: '20px'}}/>
                             <div>Orders</div>
                         </NavLink>
+                        <NavLink tag={Link} to="/giftcards" className="text-dark d-flex flex-column align-items-center">
+                            <i className="bi bi-gift" style={{fontSize: '20px'}}/>
+                            <div>Giftcards</div>
+                        </NavLink>
                     </Nav>
                     <Nav className="ms-auto">
                         <NavItem

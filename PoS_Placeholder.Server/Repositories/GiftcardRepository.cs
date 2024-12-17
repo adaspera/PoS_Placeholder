@@ -15,5 +15,8 @@ public class GiftcardRepository : Repository<Giftcard>
         return await _db.Giftcards.FirstOrDefaultAsync(g => g.Id == giftcardId && g.BusinessId == businessId);
     }
     
-    
+    public async Task<Giftcard> GetByStringIdAndBidAsync(string giftcardId, int businessId)
+    {
+        return await _db.Giftcards.FirstOrDefaultAsync(g => g.Id == giftcardId && g.BusinessId == businessId);
+    }
 }

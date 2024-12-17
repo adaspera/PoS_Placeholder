@@ -4,6 +4,7 @@ import * as discountApi from "@/api/discountApi.jsx";
 import * as ProductApi from "@/api/productApi.jsx";
 import {addProductVariationsToDiscount, getVariationsByDiscountId} from "@/api/discountApi.jsx";
 import {getCurrency} from "@/helpers/currencyUtils.jsx";
+import toastNotify from "@/helpers/toastNotify.js";
 
 
 const Discount = () => {
@@ -58,6 +59,7 @@ const Discount = () => {
     const removeDiscount = async (id) => {
         await discountApi.deleteDiscount(id);
         setDiscounts(discounts.filter(discount => discount.id !== id));
+        toastNotify("Discount successfully delete", "warning");
     }
     
     const addVariationToDiscount = async (id) => {
@@ -78,18 +80,24 @@ const Discount = () => {
         await discountApi.addProductVariationsToDiscount(id, changeLogs);
         setChangeLogs([]);
         setOpen('');
+        toastNotify("Changes saved!", "success");
     }
 
     const handleCreateDiscount = async () => {
-        const newDiscount = {
-            amount: discountAmount,
-            startDate: discountStartDate,
-            endDate: discountEndDate,
-            isPercentage: isDiscountPercentage
-        }
+        try{
+            const newDiscount = {
+                amount: discountAmount,
+                startDate: discountStartDate,
+                endDate: discountEndDate,
+                isPercentage: isDiscountPercentage
+            }
 
-        const createdDiscount = await discountApi.createDiscount(newDiscount);
-        setDiscounts([...discounts, createdDiscount]);
+            const createdDiscount = await discountApi.createDiscount(newDiscount);
+            setDiscounts([...discounts, createdDiscount]);
+            toastNotify("New discount created!", "success");
+        } catch (e) {
+            toastNotify("Please provide all the fields correctly.", "error");
+        }
     }
 
     const handleClearDiscount = async () => {

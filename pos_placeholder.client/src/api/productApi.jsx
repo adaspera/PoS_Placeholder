@@ -13,6 +13,7 @@ export const addProduct = async (product) => {
         return await apiService.post("/api/products", product);
     } catch (e) {
         console.log("Error creating product:", e);
+        throw e;
     }
 };
 
@@ -53,6 +54,7 @@ export const addProductVariation = async (productVariation) => {
         return await apiService.post("/api/productVariations", productVariation);
     } catch (e) {
         console.error("Error creating productVariation:", e);
+        throw e;
     }
 };
 

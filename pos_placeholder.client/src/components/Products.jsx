@@ -13,6 +13,7 @@ import {
 import * as ProductApi from "@/api/productApi.jsx";
 import ProductVariationForm from "@/components/shared/ProductVariationForm.jsx";
 import {getCurrency} from "@/helpers/currencyUtils.jsx";
+import toastNotify from "@/helpers/toastNotify.js";
 
 const Products = () => {
     const [isLoading, setIsLoading] = useState(true);
@@ -62,19 +63,26 @@ const Products = () => {
     const removeProduct = async (id) => {
         await ProductApi.deleteProduct(id);
         setProducts(products.filter(product => product.id !== id));
+        toastNotify("Product removed successfully.", "warning");
     }
 
     const removeVariation = async (id) => {
         await ProductApi.deleteProductVariation(id);
         setVariations(variations.filter(variation => variation.id !== id));
+        toastNotify("Variation removed successfully.", "warning");
     }
 
     const addProduct = async () => {
-        const newProduct = new FormData();
-        newProduct.append("name", itemName);
-        newProduct.append("itemGroup", itemGroup);
-        const createdProduct = await ProductApi.addProduct(newProduct);
-        setProducts([...products, createdProduct]);
+        try {
+            const newProduct = new FormData();
+            newProduct.append("name", itemName);
+            newProduct.append("itemGroup", itemGroup);
+            const createdProduct = await ProductApi.addProduct(newProduct);
+            setProducts([...products, createdProduct]);
+            toastNotify("New product created!", "success");
+        } catch (e) {
+            toastNotify("Please provide all the fields correctly.", "error");
+        }
     };
 
     const updateProduct = async (item) => {
@@ -90,6 +98,7 @@ const Products = () => {
         setProducts(
             products.map((v) => (v.id === newProduct.id ? newProduct : v))
         );
+        toastNotify("Product updated!", "success");
         handleClearEditProduct();
     };
 
@@ -107,9 +116,14 @@ const Products = () => {
 
     const handleAddVariation = async (productId, formData) => {
         formData.append("productId", productId);
-        const createdVariation = await ProductApi.addProductVariation(formData);
-        setVariations([...variations, createdVariation]);
-        setIsAddVariationFormOpen(false);
+        try {
+            const createdVariation = await ProductApi.addProductVariation(formData);
+            setVariations([...variations, createdVariation]);
+            setIsAddVariationFormOpen(false);
+            toastNotify("Variation successfully created!", "success");
+        } catch(e) {
+            toastNotify("Please provide all the fields correctly.", "error");
+        }
     };
 
     const handleUpdateVariation = async (formData) => {
@@ -119,6 +133,7 @@ const Products = () => {
             variations.map((v) => (v.id === updatedVariation.id ? updatedVariation : v))
         );
         setEditVariationFormOpenFor('');
+        toastNotify("Variation successfully updated!", "success");
     };
 
     if (isLoading) {

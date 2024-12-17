@@ -3,6 +3,7 @@ import * as orderApi from "@/api/orderApi.jsx";
 import * as paymentApi from "@/api/paymentApi.jsx";
 import {useEffect, useState} from "react";
 import {getCurrency} from "@/helpers/currencyUtils.jsx";
+import toastNotify from "@/helpers/toastNotify.js";
 
 const Orders = () => {
     const [allOrders, setAllOrders] = useState([]);
@@ -29,9 +30,10 @@ const Orders = () => {
         try {
             const refundedOrder = await paymentApi.makeRefund(orderId);
             setAllOrders(prev => prev.map(o => o.id === orderId ? refundedOrder : o));
+            toastNotify("Order successfully refunded!", "success");
         } catch (e) {
             console.log(e);
-            alert("Failed to refund the order. Please try again.");
+            toastNotify(e.message, "error");
         }
     }
 
@@ -53,12 +55,12 @@ const Orders = () => {
                 {allOrders.map((order, index) => (
                     <div key={index} className="justify-content-center border rounded">
                         <Row className="p-2 align-items-center">
-                            <Col xs={12} sm={7} className="d-flex align-items-center mb-2 mb-md-0">
+                            <Col sm={7} className="d-flex align-items-center mb-2 mb-md-0">
                                 <Col className="me-3">Order #{order.id}</Col>
                                 <Col className="me-3">{getCurrency()} {order.totalPrice}</Col>
                                 <Col className="fw-bold fst-italic">{order.status}</Col>
                             </Col>
-                            <Col xs={12} sm={5}
+                            <Col sm={5}
                                  className="d-flex justify-content-start justify-content-sm-end gap-2 mt-2 mt-md-0">
                                 {order.status !== "Refunded" && (
                                     <Button color="danger" size="sm"
@@ -93,7 +95,8 @@ const Orders = () => {
                             </div>
                             <div className="row">
                                 <div className="col-sm-2 col-4 text-start">Discounts:</div>
-                                <div className="col-auto text-start">-{getCurrency()}{selectedOrder.discountsTotal}</div>
+                                <div
+                                    className="col-auto text-start">-{getCurrency()}{selectedOrder.discountsTotal}</div>
                             </div>
                             <hr/>
                             <div className="row fw-bold">
