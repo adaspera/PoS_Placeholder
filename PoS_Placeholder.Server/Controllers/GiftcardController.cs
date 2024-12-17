@@ -75,7 +75,7 @@ public class GiftcardController : ControllerBase
 
             var newGiftcard = new Giftcard
             {
-                Balance = createGiftcardDto.BalanceAmount,
+                Balance = Math.Round(createGiftcardDto.BalanceAmount, 2),
                 BusinessId = user.BusinessId,
             };
 
@@ -87,6 +87,59 @@ public class GiftcardController : ControllerBase
         catch (Exception ex)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+        }
+    }
+
+    [HttpPut]
+    [Authorize(Roles = nameof(UserRole.Owner))]
+    public async Task<IActionResult> UpdateGiftcard([FromBody] UpdateGiftcardDto updateGiftcardDto)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return Unauthorized("User not found.");
+
+            var giftcard = await _giftcardRepository.GetByStringIdAndBidAsync(updateGiftcardDto.Id, user.BusinessId);
+            if (giftcard == null)
+                return NotFound("Giftcard not found.");
+
+            giftcard.Balance = Math.Round(updateGiftcardDto.BalanceAmount ?? 0m, 2);
+
+            _giftcardRepository.Update(giftcard);
+            await _giftcardRepository.SaveChangesAsync();
+            return Ok(giftcard);
+        }
+        catch (Exception e)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+        }
+    }
+
+    [HttpDelete("{id}")]
+    [Authorize(Roles = nameof(UserRole.Owner))]
+    public async Task<IActionResult> DeleteGiftcard([FromRoute] string id)
+    {
+        try
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return Unauthorized("User not found.");
+
+            var giftcard = await _giftcardRepository.GetByStringIdAndBidAsync(id, user.BusinessId);
+            if (giftcard == null)
+                return NotFound("Giftcard not found.");
+
+            _giftcardRepository.Remove(giftcard);
+            await _giftcardRepository.SaveChangesAsync();
+            return NoContent();
+        }
+        catch (Exception e)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
         }
     }
 }

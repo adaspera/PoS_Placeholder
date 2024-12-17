@@ -73,12 +73,16 @@ const Products = () => {
     }
 
     const addProduct = async () => {
-        const newProduct = new FormData();
-        newProduct.append("name", itemName);
-        newProduct.append("itemGroup", itemGroup);
-        const createdProduct = await ProductApi.addProduct(newProduct);
-        setProducts([...products, createdProduct]);
-        toastNotify("New product created!", "success");
+        try {
+            const newProduct = new FormData();
+            newProduct.append("name", itemName);
+            newProduct.append("itemGroup", itemGroup);
+            const createdProduct = await ProductApi.addProduct(newProduct);
+            setProducts([...products, createdProduct]);
+            toastNotify("New product created!", "success");
+        } catch (e) {
+            toastNotify("Please provide all the fields correctly.", "error");
+        }
     };
 
     const updateProduct = async (item) => {

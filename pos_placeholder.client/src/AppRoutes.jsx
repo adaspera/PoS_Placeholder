@@ -3,6 +3,7 @@ import Business from "@/components/Business.jsx";
 import Products from "@/components/Products.jsx";
 import Orders from "@/components/Orders.jsx";
 import Discount from "@/components/Discount.jsx";
+import Giftcards from "@/components/Giftcards.jsx";
 
 
 const AppRoutes = [
@@ -25,6 +26,10 @@ const AppRoutes = [
     {
         path: '/orders',
         element: <Orders />
+    },
+    {
+        path: '/giftcards',
+        element: <Giftcards />
     }
 
 ];

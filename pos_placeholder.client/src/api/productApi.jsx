@@ -13,6 +13,7 @@ export const addProduct = async (product) => {
         return await apiService.post("/api/products", product);
     } catch (e) {
         console.log("Error creating product:", e);
+        throw e;
     }
 };
 
