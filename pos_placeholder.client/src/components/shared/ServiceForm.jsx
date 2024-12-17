@@ -1,8 +1,15 @@
 import {Button, Col, Form, FormGroup, Input, Label} from "reactstrap";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 
-const ServiceForm = ({ onSubmit, prevService = emptyService }) => {
+// eslint-disable-next-line react/prop-types
+const ServiceForm = ({ onSubmit, employees, prevService = emptyService }) => {
     const [service, setService] = useState(prevService);
+
+    useEffect(() => {
+        if (employees.length > 0 && !service.userId) {
+            setService(prevState => ({ ...prevState, userId: employees[0].id }));
+        }
+    }, [employees]);
 
     const handleInputChange = (e) => {
         const { id, value, type, checked } = e.target;
@@ -21,12 +28,12 @@ const ServiceForm = ({ onSubmit, prevService = emptyService }) => {
     return (
         <Form onSubmit={handleSubmit}>
             <FormGroup>
-                <Label for="nameOfService">Name of service</Label>
+                <Label for="name">Name of service</Label>
                 <Input
-                    id="nameOfService"
+                    id="name"
                     placeholder="Enter the service name"
                     type="text"
-                    value={service.nameOfService}
+                    value={service.name}
                     onChange={handleInputChange}
                     required
                 />
@@ -53,6 +60,20 @@ const ServiceForm = ({ onSubmit, prevService = emptyService }) => {
                     required
                 />
             </FormGroup>
+            <FormGroup>
+                <Label for="userId">Employee</Label>
+                <Input
+                    id="userId"
+                    type="select"
+                    value={service.userId}
+                    onChange={handleInputChange}
+                    required
+                >
+                    {employees.map(employee => (
+                        <option key={employee.id} value={employee.id}>{employee.firstName} {employee.lastName}</option>
+                    ))}
+                </Input>
+            </FormGroup>
             <FormGroup check>
                 <Label check>
                     <Input
@@ -78,10 +99,11 @@ const ServiceForm = ({ onSubmit, prevService = emptyService }) => {
 };
 
 const emptyService = {
-    nameOfService: "",
+    name: "",
     serviceCharge: "",
     duration: "",
-    isPercentage: false
+    isPercentage: false,
+    userId: ""
 }
 
 export default ServiceForm;

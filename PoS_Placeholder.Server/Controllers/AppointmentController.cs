@@ -145,14 +145,14 @@ public class AppointmentController : ControllerBase
 
     
 
-    [HttpPost("create", Name = "CreateAppointment")]
+    [HttpPost(Name = "CreateAppointment")]
     [Authorize(Roles = nameof(UserRole.Owner))]
     [Description("Create a new appointment.")]
     [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(Appointment))]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(BadRequestResult))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized, Type = typeof(UnauthorizedResult))]
     [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(StatusCodeResult))]
-    public async Task<IActionResult> CreateAppointment([FromForm] CreateAppointmentDto createAppointmentDto)
+    public async Task<IActionResult> CreateAppointment([FromBody] CreateAppointmentDto createAppointmentDto)
     {
         try
         {
@@ -168,7 +168,7 @@ public class AppointmentController : ControllerBase
             }
 
             var businessId = user.BusinessId;
-            var service = _serviceRepository.GetServiceByIdAsync(createAppointmentDto.ServiceId, businessId);
+            var service = await _serviceRepository.GetServiceByIdAsync(createAppointmentDto.ServiceId, businessId);
 
             if(service == null)
             {
@@ -179,8 +179,8 @@ public class AppointmentController : ControllerBase
 
             var dateFormat = _dateTimeService.GetDateFormatByISO("ISO8601");
 
-            if (DateTime.TryParseExact(createAppointmentDto.TimeReserved, "yyyyMMdd-HHmmss",
-                CultureInfo.InvariantCulture, DateTimeStyles.None, out var timeReserved))
+            if (DateTime.TryParseExact(createAppointmentDto.TimeReserved, "yyyy-MM-ddTHH:mm",
+                CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var timeReserved))
             {
                 createAppointmentDto.TimeReserved = timeReserved.ToString(dateFormat);
             }
@@ -211,7 +211,7 @@ public class AppointmentController : ControllerBase
         }
     }
 
-    [HttpPut("update/{id:int}", Name = "UpdateAppointment")]
+    [HttpPut("{id:int}", Name = "UpdateAppointment")]
     [Authorize(Roles = nameof(UserRole.Owner))]
     [Description("Update an existing appointment.")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Appointment))]
@@ -220,7 +220,7 @@ public class AppointmentController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden, Type = typeof(ForbidResult))]
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
     [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(StatusCodeResult))]
-    public async Task<IActionResult> UpdateAppointment([FromForm] UpdateAppointmentDto updateAppointmentDto, int id)
+    public async Task<IActionResult> UpdateAppointment([FromBody] UpdateAppointmentDto updateAppointmentDto, int id)
     {
         try
         {
@@ -254,8 +254,8 @@ public class AppointmentController : ControllerBase
 
             if(updateAppointmentDto.TimeReserved != null)
             {
-                if (DateTime.TryParseExact(updateAppointmentDto.TimeReserved, "yyyyMMdd-HHmmss",
-                CultureInfo.InvariantCulture, DateTimeStyles.None, out var timeReserved))
+                if (DateTime.TryParseExact(updateAppointmentDto.TimeReserved, "yyyy-MM-ddTHH:mm",
+                CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var timeReserved))
                 {
                     updateAppointmentDto.TimeReserved = timeReserved.ToString(dateFormat);
                 }
@@ -282,7 +282,7 @@ public class AppointmentController : ControllerBase
         }
     }
 
-    [HttpDelete("delete/{id:int}", Name = "DeleteAppointment")]
+    [HttpDelete("{id:int}", Name = "DeleteAppointment")]
     [Authorize(Roles = nameof(UserRole.Owner))]
     [Description("Delete an existing appointment")]
     [ProducesResponseType(StatusCodes.Status204NoContent, Type = typeof(NoContentResult))]

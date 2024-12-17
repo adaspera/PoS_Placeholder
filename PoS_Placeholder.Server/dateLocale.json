@@ -1,6 +1,6 @@
 ﻿{
   "ISO8601": {
-    "Format": "yyyyMMdd-HHmmss",
+    "Format": "yyyy-MM-ddTHH:mm:ss",
     "DisplayDateFormat": "yyyy-MM-dd",
     "DisplayTimeFormat": "hh:mm",
     "DisplayFullDateFormat": "yyyy-MM-dd hh:mm"

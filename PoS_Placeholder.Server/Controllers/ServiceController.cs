@@ -133,14 +133,14 @@ public class ServiceController : ControllerBase
         return Ok(userServices);
     }
 
-    [HttpPost("create", Name = "CreateService")]
+    [HttpPost(Name = "CreateService")]
     [Authorize(Roles = nameof(UserRole.Owner))]
     [Description("Creates a new service.")]
     [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(Appointment))]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(BadRequestResult))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized, Type = typeof(UnauthorizedResult))]
     [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(StatusCodeResult))]
-    public async Task<IActionResult> CreateService([FromForm] CreateServiceDto createServiceDto)
+    public async Task<IActionResult> CreateService([FromBody] CreateServiceDto createServiceDto)
     {
         try
         {
@@ -178,7 +178,7 @@ public class ServiceController : ControllerBase
         }
     }
 
-    [HttpPut("update/{id:int}", Name = "UpdateService")]
+    [HttpPut("{id:int}", Name = "UpdateService")]
     [Authorize(Roles = nameof(UserRole.Owner))]
     [Description("Update an existing service.")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Service))]
@@ -187,7 +187,7 @@ public class ServiceController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden, Type = typeof(ForbidResult))]
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundResult))]
     [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(StatusCodeResult))]
-    public async Task<IActionResult> UpdateService([FromForm] UpdateServiceDto updateServiceDto, int id)
+    public async Task<IActionResult> UpdateService([FromBody] UpdateServiceDto updateServiceDto, int id)
     {
         try
         {
@@ -235,7 +235,7 @@ public class ServiceController : ControllerBase
         }
     }
 
-    [HttpDelete("delete/{id:int}", Name = "DeleteService")]
+    [HttpDelete("{id:int}", Name = "DeleteService")]
     [Authorize(Roles = nameof(UserRole.Owner))]
     [Description("Delete an existing service.")]
     [ProducesResponseType(StatusCodes.Status204NoContent, Type = typeof(NoContentResult))]

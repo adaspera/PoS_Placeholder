@@ -2,31 +2,44 @@
 import DatePicker from "react-datepicker";
 import "@/css/WorkTimeCalendar.css";
 import "react-datepicker/dist/react-datepicker.css";
-import { Col, Row, Button } from "reactstrap";
+import {Col, Row, Button, Form, FormGroup, Label, Input} from "reactstrap";
 import { useState } from "react";
 
-const AppointmentCalendar = ({ workTimes, service, appointments, onSelect }) => {
+const AppointmentCalendar = ({ workTimes, service, appointments, onSelect, onDelete }) => {
     const [selectedWorkDay, setSelectedWorkDay] = useState(null);
     const [selectedWorkTime, setSelectedWorkTime] = useState(null);
 
+    const [customerName, setCustomerName] = useState("");
+    const [customerPhone, setCustomerPhone] = useState("");
+
+    //sitas agidys mane pribaigs AAAAAAAAAAAAAAAAAAA
+    const formatDateLocal = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+    };
+
     const workDays = Array.from(
-        new Set(workTimes.map((wt) => new Date(wt.day).toISOString().split("T")[0]))
+        new Set(workTimes.map((wt) => formatDateLocal(new Date(wt.day))))
     );
 
     const handleDateSelection = (date) => {
-        const formattedDate = date.toISOString().split("T")[0];
+        const formattedDate = formatDateLocal(date);
         const workTime = workTimes.find(
-            (wt) => new Date(wt.day).toISOString().split("T")[0] === formattedDate
+            (wt) => formatDateLocal(new Date(wt.day)) === formattedDate
         );
 
         setSelectedWorkDay(date);
         setSelectedWorkTime(workTime);
     };
 
-    const generateAvailableTimes = () => {
+    const generateTimes = () => {
         if (!selectedWorkTime || !service?.duration) return [];
 
         const availableTimes = [];
+        const unavailableTimes = [];
+
         const start = parseTimeToMinutes(selectedWorkTime.startTime);
         const end = parseTimeToMinutes(selectedWorkTime.endTime);
         const breakStart = selectedWorkTime.breakStart
@@ -37,26 +50,26 @@ const AppointmentCalendar = ({ workTimes, service, appointments, onSelect }) => 
             : null;
 
         const duration = service.duration;
+        const selectedDateStr = formatDateLocal(selectedWorkDay);
 
         for (let time = start; time + duration <= end; time += duration) {
-
             if (breakStart && time >= breakStart && time < breakEnd) continue;
 
             const timeSlot = formatMinutesToTime(time);
 
-            const isReserved = appointments.some(
-                (appt) =>
-                    new Date(appt.timeReserved).toISOString().split("T")[0] ===
-                    selectedWorkDay.toISOString().split("T")[0] &&
-                    appt.timeReserved.includes(timeSlot)
-            );
+            const matchedAppointment = appointments.find((appt) => {
+                const apptDate = formatDateLocal(new Date(appt.timeReserved));
+                return apptDate === selectedDateStr && appt.timeReserved.includes(timeSlot);
+            });
 
-            if (!isReserved) {
+            if (!matchedAppointment) {
                 availableTimes.push(timeSlot);
+            } else {
+                unavailableTimes.push({ timeSlot, appointmentId: matchedAppointment.id });
             }
         }
 
-        return availableTimes;
+        return { availableTimes, unavailableTimes };
     };
 
     const parseTimeToMinutes = (time) => {
@@ -69,6 +82,19 @@ const AppointmentCalendar = ({ workTimes, service, appointments, onSelect }) => 
         const mins = (minutes % 60).toString().padStart(2, "0");
         return `${hours}:${mins}`;
     };
+
+    const handleTimeSelection = (timeSlot) => {
+        if (customerPhone === "" || customerName === "") {
+            alert("Please enter a customer phone and name");
+        } else {
+            onSelect({
+                timeReserved: `${formatDateLocal(selectedWorkDay)}T${timeSlot}`,
+                customerName: customerName,
+                customerPhone: customerPhone,
+                serviceId: service.id
+            })
+        }
+    }
 
     return (
         <Col>
@@ -83,19 +109,52 @@ const AppointmentCalendar = ({ workTimes, service, appointments, onSelect }) => 
             </div>
             {selectedWorkTime ? (
                 <div className="mt-3">
+                    <h6>
+                        Customer information
+                    </h6>
+                    <Row>
+                        <Form>
+                            <FormGroup>
+                                <Label for="customerName">Customer name</Label>
+                                <Input id="customerName"
+                                       type="text"
+                                       value={customerName}
+                                       onChange={(e) => setCustomerName(e.target.value)}
+                                />
+                            </FormGroup>
+                            <FormGroup>
+                                <Label for="customerPhone">Customer phone number</Label>
+                                <Input id="customerName"
+                                       type="text"
+                                       value={customerPhone}
+                                       onChange={(e) => setCustomerPhone(e.target.value)}
+                                />
+                            </FormGroup>
+                        </Form>
+                    </Row>
                     <h6>Available Times</h6>
                     <Row>
-                        {generateAvailableTimes().map((timeSlot) => (
+                        {generateTimes().availableTimes?.map((timeSlot) => (
                             <Col key={timeSlot} xs="4" className="mb-2">
                                 <Button
                                     color="primary"
                                     block
+                                    onClick={() => handleTimeSelection(timeSlot)}
+                                >
+                                    {timeSlot}
+                                </Button>
+                            </Col>
+                        ))}
+                    </Row>
+                    <h6>Unavailable Times</h6>
+                    <Row>
+                        {generateTimes().unavailableTimes?.map(({ timeSlot, appointmentId }) => (
+                            <Col key={timeSlot} xs="4" className="mb-2">
+                                <Button
+                                    color="danger"
+                                    block
                                     onClick={() =>
-                                        onSelect({
-                                            timeReserved: `${selectedWorkDay
-                                                .toISOString()
-                                                .split("T")[0]}T${timeSlot}`,
-                                        })
+                                        onDelete(appointmentId)
                                     }
                                 >
                                     {timeSlot}

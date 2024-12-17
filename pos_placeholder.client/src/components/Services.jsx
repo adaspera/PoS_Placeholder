@@ -16,18 +16,29 @@ const Services = () => {
     const [services, setServices] = useState([]);
     const [workTimes, setWorkTimes] = useState([]);
     const [appointments, setAppointments] = useState([]);
+    const [employees, setEmployees] = useState([]);
 
     const [appointmentModalOpenFor, setAppointmentModalOpenFor] = useState('');
     const [open, setOpen] = useState('');
 
-    const fetchServices = async () => {
-        const fetchedServices = await serviceApi.getAllServices();
-        setServices(fetchedServices);
+    const fetchStartupData = async () => {
+        await fetchServices();
+        await fetchEmployees();
         setIsLoading(false);
     }
 
+    const fetchServices = async () => {
+        const fetchedServices = await serviceApi.getAllServices();
+        setServices(fetchedServices);
+    }
+
+    const fetchEmployees = async () => {
+        const fetchedEmployees = await businessApi.getAllEmployees();
+        setEmployees(fetchedEmployees);
+    }
+
     useEffect( () => {
-        fetchServices();
+        fetchStartupData();
     },[]);
 
 
@@ -43,7 +54,7 @@ const Services = () => {
         setAppointmentModalOpenFor(service.id);
         const fetchedWorkTimes = await businessApi.getWorkTimes(service.userId);
         setWorkTimes(fetchedWorkTimes);
-        const fetchedAppointments = await serviceApi.getServiceAppointments(service.userId);
+        const fetchedAppointments = await serviceApi.getServiceAppointmentsByUserId(service.userId);
         setAppointments(fetchedAppointments);
     }
 
@@ -63,23 +74,33 @@ const Services = () => {
         setServices(
             services.map((s) => (s.id === updatedService.id ? updatedService : s))
         );
+        setOpen('');
     }
 
     const handleCreateAppointment = async (appointment) => {
+        console.log(appointment);
+        const newAppointment = await serviceApi.createServiceAppointment(appointment);
+        setAppointments([...appointments, newAppointment]);
         setAppointmentModalOpenFor('');
+    }
+
+    const handleCancelAppointment = async (id) => {
+        await serviceApi.deleteServiceAppointment(id);
+        setAppointments(appointments.filter(appointment => appointment.id !== id))
     }
 
     const apointmentModal = (
         <Modal isOpen={!!appointmentModalOpenFor} fade={false} size="lg" centered>
             <ModalBody>
                 <h5 className="mb-3">
-                    {services.find((e) => e.id === appointmentModalOpenFor)?.nameOfService}
+                    {services.find((e) => e.id === appointmentModalOpenFor)?.name}
                 </h5>
                 <AppointmentCalendar
                     workTimes={workTimes}
                     service={services.find((e) => e.id === appointmentModalOpenFor)}
                     appointments={appointments}
                     onSelect={handleCreateAppointment}
+                    onDelete={handleCancelAppointment}
                 />
             </ModalBody>
             <ModalFooter>
@@ -103,7 +124,7 @@ const Services = () => {
                         <AccordionItem key={service.id}>
                             <AccordionHeader targetId={service.id.toString()}>
                                 <div className="d-flex justify-content-between w-100 me-3">
-                                    {service.nameOfService}
+                                    {service.name}
                                     <div>
                                         <Button
                                             color="danger"
@@ -126,7 +147,7 @@ const Services = () => {
                                         Create an appointment <i className="bi-calendar"></i>
                                     </Button>
                                 </div>
-                                <ServiceForm onSubmit={handleUpdateService} prevService={service}/>
+                                <ServiceForm onSubmit={handleUpdateService} employees={employees} prevService={service}/>
                             </AccordionBody>
                         </AccordionItem>
                     ))}
@@ -135,7 +156,7 @@ const Services = () => {
             </Col>
             <Col className="border rounded shadow-sm m-2 p-4">
                 <h4 className="p-2 d-flex justify-content-center">Create new service</h4>
-                <ServiceForm onSubmit={handleCreateService}/>
+                <ServiceForm employees={employees} onSubmit={handleCreateService}/>
             </Col>
         </Row>
     );
