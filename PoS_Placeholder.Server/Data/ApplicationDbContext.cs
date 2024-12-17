@@ -24,7 +24,10 @@ public class ApplicationDbContext : IdentityDbContext<User>
     public DbSet<UserWorkTime> UserWorkTimes { get; set; }
     public DbSet<Giftcard> Giftcards { get; set; }
     public DbSet<PaymentArchive> PaymentsArchive  { get; set; }
-
+    public DbSet<Service> Services { get; set; }
+    public DbSet<ServiceArchive> ServicesArchive { get; set; }
+    public DbSet<Appointment> Appointments { get; set; }
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -37,6 +40,72 @@ public class ApplicationDbContext : IdentityDbContext<User>
         modelBuilder.Entity<Order>()
             .HasOne(o => o.Business)
             .WithMany(b => b.Orders)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Order>()
+            .HasMany(o => o.Products)
+            .WithOne(b => b.Order)
+            .HasForeignKey(p => p.OrderId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Order>()
+            .HasMany(o => o.Taxes)
+            .WithOne(b => b.Order)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Order>()
+            .HasMany(o => o.Discounts)
+            .WithOne(b => b.Order)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Order>()
+            .HasMany(o => o.Payments)
+            .WithOne(b => b.Order)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Order>()
+            .HasMany(o => o.Services)
+            .WithOne(b => b.Order)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Appointment>()
+            .HasOne(o => o.User)
+            .WithMany(b => b.Appointments)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Service>()
+            .HasOne(o => o.User)
+            .WithMany(o => o.Services)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Service>()
+            .HasOne(o => o.Business)
+            .WithMany(o => o.Services)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ServiceArchive>()
+            .HasOne(o => o.Order)
+            .WithMany(o => o.Services)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ProductArchive>()
+            .HasOne(o => o.Order)
+            .WithMany(o => o.Products)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<TaxArchive>()
+            .HasOne(o => o.Order)
+            .WithMany(o => o.Taxes)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<DiscountArchive>()
+            .HasOne(o => o.Order)
+            .WithMany(o => o.Discounts)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<PaymentArchive>()
+            .HasOne(o => o.Order)
+            .WithMany(o => o.Payments)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

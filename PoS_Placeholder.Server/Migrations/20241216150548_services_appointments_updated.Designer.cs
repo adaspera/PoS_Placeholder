@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PoS_Placeholder.Server.Data;
 
@@ -11,9 +12,11 @@ using PoS_Placeholder.Server.Data;
 namespace PoS_Placeholder.Server.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241216150548_services_appointments_updated")]
+    partial class services_appointments_updated
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -185,9 +188,6 @@ namespace PoS_Placeholder.Server.Migrations
 
                     b.Property<string>("TimeReserved")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TimeUpdated")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UserId")
@@ -664,40 +664,6 @@ namespace PoS_Placeholder.Server.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("PoS_Placeholder.Server.Models.UserWorkTime", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<TimeSpan?>("BreakEnd")
-                        .HasColumnType("time");
-
-                    b.Property<TimeSpan?>("BreakStart")
-                        .HasColumnType("time");
-
-                    b.Property<DateTime>("Day")
-                        .HasColumnType("datetime2");
-
-                    b.Property<TimeSpan>("EndTime")
-                        .HasColumnType("time");
-
-                    b.Property<TimeSpan>("StartTime")
-                        .HasColumnType("time");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("UserWorkTimes");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -931,17 +897,6 @@ namespace PoS_Placeholder.Server.Migrations
                     b.Navigation("Business");
                 });
 
-            modelBuilder.Entity("PoS_Placeholder.Server.Models.UserWorkTime", b =>
-                {
-                    b.HasOne("PoS_Placeholder.Server.Models.User", "User")
-                        .WithMany("UserWorkTimes")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("PoS_Placeholder.Server.Models.Business", b =>
                 {
                     b.Navigation("Giftcards");
@@ -979,8 +934,6 @@ namespace PoS_Placeholder.Server.Migrations
 
                     b.Navigation("Orders");
 
-                    b.Navigation("UserWorkTimes");
-                    
                     b.Navigation("Services");
                 });
 #pragma warning restore 612, 618

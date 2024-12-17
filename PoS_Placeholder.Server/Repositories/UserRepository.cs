@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using PoS_Placeholder.Server.Models;
 using Microsoft.EntityFrameworkCore;
 using PoS_Placeholder.Server.Data;
