@@ -69,6 +69,8 @@ const Home = () => {
                 discountedPrice = discountedPrice.toFixed(2);
             }
         }
+        console.log(discountedPrice);
+        
         const newProductInCart = {
             productVariationId: variation.id,
             fullName: product.name + " " + variation.name,
