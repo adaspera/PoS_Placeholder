@@ -53,6 +53,7 @@ export const addProductVariation = async (productVariation) => {
         return await apiService.post("/api/productVariations", productVariation);
     } catch (e) {
         console.error("Error creating productVariation:", e);
+        throw e;
     }
 };
 

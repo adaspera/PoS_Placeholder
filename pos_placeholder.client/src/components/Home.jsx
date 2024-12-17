@@ -7,6 +7,7 @@ import * as discountApi from "@/api/discountApi.jsx";
 import {getCurrency} from "@/helpers/currencyUtils.jsx";
 import Payment from "@/components/payment/payment.jsx";
 import Giftcard from "@/components/shared/Giftcard.jsx";
+import toastNotify from "@/helpers/toastNotify.js";
 
 const Home = () => {
     const [isLoading, setIsLoading] = useState(true);
@@ -119,15 +120,16 @@ const Home = () => {
         setOrder((prevOrder) => ({...prevOrder, products: updatedProducts}));
     };
 
-    const onPaymentSuccess = () => {
+    const onPaymentSuccess = () => { 
         setSelectedPaymentMethod(null);
         setPaySelected(false);
         setOrder({products: []});
+        toastNotify("Order successfully created!", "success");
     };
 
     const handlePayNowClick = async () => {
         if (order.products.length === 0) {
-            alert("Your cart is empty. Please add items before paying.");
+            toastNotify("Your cart is empty! Add some items...", "warning")
             return;
         }
 

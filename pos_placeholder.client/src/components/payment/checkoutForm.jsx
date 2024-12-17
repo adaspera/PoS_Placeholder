@@ -1,6 +1,7 @@
 ﻿import {useStripe, useElements, PaymentElement} from '@stripe/react-stripe-js';
 import React from 'react';
 import * as orderApi from "@/api/orderApi.jsx";
+import toastNotify from "@/helpers/toastNotify.js";
 
 const CheckoutForm = ({paymentData, order, tip, onPaymentSuccess}) => {
     const stripe = useStripe();
@@ -22,7 +23,7 @@ const CheckoutForm = ({paymentData, order, tip, onPaymentSuccess}) => {
         });
 
         if (result.error) {
-            alert(result.error.message);
+            toastNotify(result.error.message, "error");
         } else {
             const createOrderDto = {
                 Tip: tip ? Number(tip) : null,

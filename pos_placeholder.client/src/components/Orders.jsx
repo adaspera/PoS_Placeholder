@@ -3,6 +3,7 @@ import * as orderApi from "@/api/orderApi.jsx";
 import * as paymentApi from "@/api/paymentApi.jsx";
 import {useEffect, useState} from "react";
 import {getCurrency} from "@/helpers/currencyUtils.jsx";
+import toastNotify from "@/helpers/toastNotify.js";
 
 const Orders = () => {
     const [allOrders, setAllOrders] = useState([]);
@@ -29,9 +30,10 @@ const Orders = () => {
         try {
             const refundedOrder = await paymentApi.makeRefund(orderId);
             setAllOrders(prev => prev.map(o => o.id === orderId ? refundedOrder : o));
+            toastNotify("Order successfully refunded!", "success");
         } catch (e) {
             console.log(e);
-            alert("Failed to refund the order. Please try again.");
+            toastNotify(e.message, "error");
         }
     }
 

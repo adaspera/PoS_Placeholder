@@ -29,6 +29,7 @@ export const createDiscount = async (discount) => {
         return await apiService.post("/api/discounts", discount);
     } catch (e) {
         console.error("Error creating discount:", e);
+        throw e;
     }
 };
 
