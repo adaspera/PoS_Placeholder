@@ -1,0 +1,20 @@
+﻿{
+  "ISO8601": {
+    "Format": "yyyy-MM-ddTHH:mm:ss",
+    "DisplayDateFormat": "yyyy-MM-dd",
+    "DisplayTimeFormat": "hh:mm",
+    "DisplayFullDateFormat": "yyyy-MM-dd hh:mm"
+  },
+  "USA": {
+    "Format": "mmDDyyyy-HHmmss",
+    "DisplayDateFormat": "mm/DD/yyyy",
+    "DisplayTimeFormat": "hh:mm tt",
+    "DisplayFullDateFormat": "mm/DD/yyyy hh:mm tt"
+  },
+  "LIT": {
+    "Format": "yyyyMMdd-HHmmss",
+    "DisplayDateFormat": "yyyy-MM-dd",
+    "DisplayTimeFormat": "hh:mm",
+    "DisplayFullDateFormat": "yyyy-MM-dd hh:mm"
+  }
+}

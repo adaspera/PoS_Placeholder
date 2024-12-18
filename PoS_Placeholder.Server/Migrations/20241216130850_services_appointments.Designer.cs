@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PoS_Placeholder.Server.Data;
 
@@ -11,9 +12,11 @@ using PoS_Placeholder.Server.Data;
 namespace PoS_Placeholder.Server.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241216130850_services_appointments")]
+    partial class services_appointments
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -179,16 +182,11 @@ namespace PoS_Placeholder.Server.Migrations
                     b.Property<int>("ServiceId")
                         .HasColumnType("int");
 
-                    b.Property<string>("TimeCreated")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<DateTime>("TimeCreated")
+                        .HasColumnType("datetime2");
 
-                    b.Property<string>("TimeReserved")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TimeUpdated")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<DateTime>("TimeReserved")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("UserId")
                         .IsRequired()
@@ -496,7 +494,7 @@ namespace PoS_Placeholder.Server.Migrations
                     b.Property<int>("BusinessId")
                         .HasColumnType("int");
 
-                    b.Property<long?>("Duration")
+                    b.Property<long>("Duration")
                         .HasColumnType("bigint");
 
                     b.Property<bool>("IsPercentage")
@@ -662,40 +660,6 @@ namespace PoS_Placeholder.Server.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
-                });
-
-            modelBuilder.Entity("PoS_Placeholder.Server.Models.UserWorkTime", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<TimeSpan?>("BreakEnd")
-                        .HasColumnType("time");
-
-                    b.Property<TimeSpan?>("BreakStart")
-                        .HasColumnType("time");
-
-                    b.Property<DateTime>("Day")
-                        .HasColumnType("datetime2");
-
-                    b.Property<TimeSpan>("EndTime")
-                        .HasColumnType("time");
-
-                    b.Property<TimeSpan>("StartTime")
-                        .HasColumnType("time");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("UserWorkTimes");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -931,17 +895,6 @@ namespace PoS_Placeholder.Server.Migrations
                     b.Navigation("Business");
                 });
 
-            modelBuilder.Entity("PoS_Placeholder.Server.Models.UserWorkTime", b =>
-                {
-                    b.HasOne("PoS_Placeholder.Server.Models.User", "User")
-                        .WithMany("UserWorkTimes")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("PoS_Placeholder.Server.Models.Business", b =>
                 {
                     b.Navigation("Giftcards");
@@ -979,8 +932,6 @@ namespace PoS_Placeholder.Server.Migrations
 
                     b.Navigation("Orders");
 
-                    b.Navigation("UserWorkTimes");
-                    
                     b.Navigation("Services");
                 });
 #pragma warning restore 612, 618

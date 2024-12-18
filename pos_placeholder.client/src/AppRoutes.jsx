@@ -3,6 +3,7 @@ import Business from "@/components/Business.jsx";
 import Products from "@/components/Products.jsx";
 import Orders from "@/components/Orders.jsx";
 import Discount from "@/components/Discount.jsx";
+import Services from "@/components/Services.jsx";
 import Giftcards from "@/components/Giftcards.jsx";
 
 
@@ -16,7 +17,7 @@ const AppRoutes = [
         element: <Business />
     },
     {
-        path: '/tax',
+        path: '/discount',
         element: <Discount />
     },
     {
@@ -30,6 +31,10 @@ const AppRoutes = [
     {
         path: '/giftcards',
         element: <Giftcards />
+    },
+    {
+        path: '/services',
+        element: <Services />
     }
 
 ];
