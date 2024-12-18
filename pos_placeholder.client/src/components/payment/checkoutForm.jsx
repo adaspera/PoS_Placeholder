@@ -3,7 +3,7 @@ import React from 'react';
 import * as orderApi from "@/api/orderApi.jsx";
 import toastNotify from "@/helpers/toastNotify.js";
 
-const CheckoutForm = ({paymentData, order, tip, onPaymentSuccess}) => {
+const CheckoutForm = ({paymentData, order, tip, onPaymentSuccess, isSplitPayment, partialAmount, onPartialPaymentSuccess}) => {
     const stripe = useStripe();
     const elements = useElements();
 
@@ -25,18 +25,28 @@ const CheckoutForm = ({paymentData, order, tip, onPaymentSuccess}) => {
         if (result.error) {
             toastNotify(result.error.message, "error");
         } else {
-            const createOrderDto = {
-                Tip: tip ? Number(tip) : null,
-                OrderItems: order.products.map(item => ({
-                    ProductVariationId: item.productVariationId,
-                    Quantity: item.quantity
-                })),
-                PaymentIntentId: paymentData.paymentIntentId,
-                GiftCardId: null,
-                Method: 0 // 0 -> "card", 1 -> "giftcard", 2 -> "cash"
-            };
-            const createdOrder = await orderApi.createOrder(createOrderDto);
-            onPaymentSuccess();
+
+            if (isSplitPayment) {
+                onPartialPaymentSuccess({
+                    PaymentIntentId: paymentData.paymentIntentId,
+                    GiftCardId: null,
+                    Method: 0, // 0 -> "card", 1 -> "giftcard", 2 -> "cash"
+                    PaidPrice: partialAmount
+                });
+            } else {
+                const createOrderDto = {
+                    Tip: tip ? Number(tip) : null,
+                    OrderItems: order.products.map(item => ({
+                        ProductVariationId: item.productVariationId,
+                        Quantity: item.quantity
+                    })),
+                    PaymentIntentId: paymentData.paymentIntentId,
+                    GiftCardId: null,
+                    Method: 0 // 0 -> "card", 1 -> "giftcard", 2 -> "cash"
+                };
+                const createdOrder = await orderApi.createOrder(createOrderDto);
+                onPaymentSuccess();
+            }
         }
     };
 
