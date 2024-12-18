@@ -139,6 +139,7 @@ const Home = () => {
                 ProductVariationId: item.productVariationId,
                 Quantity: item.quantity
             })),
+            OrderServiceIds: null,
             PaymentIntentId: null,
             GiftCardId: null,
             Method: null

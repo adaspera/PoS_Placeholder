@@ -13,5 +13,7 @@ public class OrderResponseDto
     public decimal? TaxesTotal { get; set; }
     
     public decimal? DiscountsTotal { get; set; }
+    public decimal? ServiceChargesTotal { get; set; }
     public List<OrderProductDto> Products { get; set; }
+    public List<OrderServiceDto>? Services { get; set; }
 }

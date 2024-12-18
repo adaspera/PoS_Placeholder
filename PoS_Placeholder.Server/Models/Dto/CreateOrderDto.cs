@@ -11,6 +11,7 @@ public class CreateOrderDto
     [Required]
     [MinLength(1)]
     public List<OrderItemDto> OrderItems { get; set; }
+    public List<int>? OrderServiceIds { get; set; }
     
     public string? PaymentIntentId { get; set; }
     public string? GiftCardId { get; set; }
