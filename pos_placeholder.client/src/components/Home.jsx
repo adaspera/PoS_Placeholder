@@ -70,7 +70,6 @@ const Home = () => {
                 discountedPrice = discountedPrice.toFixed(2);
             }
         }
-        console.log(discountedPrice);
         
         const newProductInCart = {
             productVariationId: variation.id,
@@ -153,8 +152,6 @@ const Home = () => {
         const paymentResponse = await paymentApi.makePayment(paymentRequestDto);
         setPaymentData(paymentResponse);
 
-        console.log(paymentResponse);
-
         setPaySelected(true);
     };
 
@@ -171,7 +168,6 @@ const Home = () => {
         };
 
         const createdOrder = await orderApi.createOrder(createOrderDto);
-        console.log(createdOrder);
 
         onPaymentSuccess();
     }
