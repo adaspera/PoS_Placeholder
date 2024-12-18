@@ -56,6 +56,24 @@ public class GiftcardController : ControllerBase
 
         return Ok(giftcard);
     }
+    
+    [HttpGet("{giftcardId}/canPay/{amount:decimal}")]
+    [Authorize]
+    public async Task<IActionResult> CanGiftcardPay(string giftcardId, decimal amount)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null)
+            return Unauthorized("User not found.");
+
+        var giftcard = await _giftcardRepository.GetGiftcardByIdAndBusinessIdAsync(giftcardId, user.BusinessId);
+        if (giftcard == null) 
+            return NotFound("Giftcard not found.");
+
+        if (giftcard.Balance >= amount)
+            return Ok();
+        else
+            return BadRequest("Insufficient giftcard balance.");
+    }
 
     [HttpPost]
     [Authorize(Roles = nameof(UserRole.Owner))]

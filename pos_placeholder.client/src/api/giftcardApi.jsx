@@ -8,6 +8,16 @@ export const getGiftcards = async () => {
     }
 }
 
+export const canGiftcardPay = async (giftcardId, amount) => {
+    try {
+        return await apiService.get(`/api/giftcards/${giftcardId}/canPay/${amount}`)
+    } catch (e) {
+        console.log("aaa");
+        console.log(e);
+        throw e;
+    }
+}
+
 export const createGiftcard = async (createGiftcardDto) => {
     try {
         return await apiService.post("/api/giftcards", createGiftcardDto);
