@@ -128,7 +128,6 @@ const Products = () => {
 
     const handleUpdateVariation = async (formData) => {
         const updatedVariation = await ProductApi.updateProductVariation(formData);
-        console.log(formData);
         setVariations(
             variations.map((v) => (v.id === updatedVariation.id ? updatedVariation : v))
         );
