@@ -59,124 +59,6 @@ const Home = () => {
         setTotalPrice(total.toFixed(2));
     }, [order]);
 
-    const handleAddToCart = async (variation, product) => {
-        let discountedPrice = null;
-        let isDiscountPercentage = null;
-        if (variation.discountId) {
-            const discount = await discountApi.getDiscount(variation.discountId);
-            if (discount) {
-                isDiscountPercentage = discount.isPercentage;
-                discountedPrice = discount.isPercentage ? variation.price - variation.price * discount.amount / 100 : discount.amount;
-                discountedPrice = discountedPrice.toFixed(2);
-            }
-        }
-        
-        const newProductInCart = {
-            productVariationId: variation.id,
-            fullName: product.name + " " + variation.name,
-            price: variation.price,
-            quantity: 1,
-            discount: discountedPrice,
-            isDiscountPercentage: isDiscountPercentage
-        };
-
-        const existingProductIndex = order.products.findIndex(item => item.productVariationId === variation.id);
-        let updatedProductsInCart;
-        if (existingProductIndex === -1) {
-            updatedProductsInCart = [...order.products, newProductInCart];
-        } else {
-            updatedProductsInCart = order.products.map((item, index) => {
-                if (index === existingProductIndex) {
-                    return {...item, quantity: item.quantity + 1};
-                }
-                return item;
-            });
-        }
-
-        setOrder(prevOrder => ({...prevOrder, products: updatedProductsInCart}));
-    };
-
-    const handleRemoveFromCart = (productVariationId) => {
-        const existingIndex = order.products.findIndex(item => item.productVariationId === productVariationId);
-        if (existingIndex === -1) {
-            return;
-        }
-
-        const existingItem = order.products[existingIndex];
-        let updatedProducts;
-
-        if (existingItem.quantity > 1) {
-            updatedProducts = order.products.map((item, index) => {
-                if (index === existingIndex) {
-                    return {...item, quantity: item.quantity - 1};
-                }
-                return item;
-            });
-        } else {
-            updatedProducts = order.products.filter(item => item.productVariationId !== productVariationId);
-        }
-
-        setOrder((prevOrder) => ({...prevOrder, products: updatedProducts}));
-    };
-
-    const onPaymentSuccess = () => { 
-        setSelectedPaymentMethod(null);
-        setPaySelected(false);
-        setOrder({products: []});
-        toastNotify("Order successfully created!", "success");
-    };
-
-    const handlePayNowClick = async () => {
-        if (order.products.length === 0) {
-            toastNotify("Your cart is empty! Add some items...", "warning")
-            return;
-        }
-
-        const createOrderDto = {
-            Tip: tip ? Number(tip) : null,
-            OrderItems: order.products.map(item => ({
-                ProductVariationId: item.productVariationId,
-                Quantity: item.quantity
-            })),
-            PaymentIntentId: null,
-            GiftCardId: null,
-            Method: null
-        };
-
-        const orderPreviewResponse = await orderApi.getOrderPreview(createOrderDto);
-        setOrderPreview(orderPreviewResponse);
-
-        const paymentRequestDto = {
-            TotalAmount: orderPreviewResponse.total
-        }
-        const paymentResponse = await paymentApi.makePayment(paymentRequestDto);
-        setPaymentData(paymentResponse);
-
-        setPaySelected(true);
-    };
-
-    const handleCashPayment = async () => {
-        const createOrderDto = {
-            Tip: tip ? Number(tip) : null,
-            OrderItems: order.products.map(item => ({
-                ProductVariationId: item.productVariationId,
-                Quantity: item.quantity
-            })),
-            PaymentIntentId: null,
-            GiftCardId: null,
-            Method: 2 // 0 -> "card", 1 -> "giftcard", 2 -> "cash"
-        };
-
-        const createdOrder = await orderApi.createOrder(createOrderDto);
-
-        onPaymentSuccess();
-    }
-
-    const handleProductClick = async (product) => {
-        setSelectedProduct(product);
-        await fetchProductVariations(product.id);
-    };
-
     const formatProductsInCart = () => {
         const formatedProductsInCart = order.products.map((item, index) => (
             <Row key={index} className="p-2">
@@ -239,9 +121,74 @@ const Home = () => {
         ));
 
         setProductsInCatalogue(catalogue);
-    }
+    };
 
-    const modal =
+    const handleProductClick = async (product) => {
+        setSelectedProduct(product);
+        await fetchProductVariations(product.id);
+    };
+
+    const handleAddToCart = async (variation, product) => {
+        let discountedPrice = null;
+        let isDiscountPercentage = null;
+        if (variation.discountId) {
+            const discount = await discountApi.getDiscount(variation.discountId);
+            if (discount) {
+                isDiscountPercentage = discount.isPercentage;
+                discountedPrice = discount.isPercentage ? variation.price - variation.price * discount.amount / 100 : discount.amount;
+                discountedPrice = discountedPrice.toFixed(2);
+            }
+        }
+
+        const newProductInCart = {
+            productVariationId: variation.id,
+            fullName: product.name + " " + variation.name,
+            price: variation.price,
+            quantity: 1,
+            discount: discountedPrice,
+            isDiscountPercentage: isDiscountPercentage
+        };
+
+        const existingProductIndex = order.products.findIndex(item => item.productVariationId === variation.id);
+        let updatedProductsInCart;
+        if (existingProductIndex === -1) {
+            updatedProductsInCart = [...order.products, newProductInCart];
+        } else {
+            updatedProductsInCart = order.products.map((item, index) => {
+                if (index === existingProductIndex) {
+                    return {...item, quantity: item.quantity + 1};
+                }
+                return item;
+            });
+        }
+
+        setOrder(prevOrder => ({...prevOrder, products: updatedProductsInCart}));
+    };
+
+    const handleRemoveFromCart = (productVariationId) => {
+        const existingIndex = order.products.findIndex(item => item.productVariationId === productVariationId);
+        if (existingIndex === -1) {
+            return;
+        }
+
+        const existingItem = order.products[existingIndex];
+        let updatedProducts;
+
+        if (existingItem.quantity > 1) {
+            updatedProducts = order.products.map((item, index) => {
+                if (index === existingIndex) {
+                    return {...item, quantity: item.quantity - 1};
+                }
+                return item;
+            });
+        } else {
+            updatedProducts = order.products.filter(item => item.productVariationId !== productVariationId);
+        }
+
+        setOrder((prevOrder) => ({...prevOrder, products: updatedProducts}));
+    };
+
+    const modal = (
         <Modal isOpen={!!selectedProduct} fade={false} size="lg" centered={true}>
             <ModalBody>
                 <h5>{selectedProduct?.name}</h5>
@@ -261,10 +208,63 @@ const Home = () => {
                 </Button>
             </ModalFooter>
         </Modal>
+    );
 
-    if (isLoading) {
-        return <div>Loading...</div>;
-    }
+    const handlePayNowClick = async () => {
+        if (order.products.length === 0) {
+            toastNotify("Your cart is empty! Add some items...", "warning")
+            return;
+        }
+
+        const createOrderDto = {
+            Tip: tip ? Number(tip) : null,
+            OrderItems: order.products.map(item => ({
+                ProductVariationId: item.productVariationId,
+                Quantity: item.quantity
+            })),
+            PaymentIntentId: null,
+            GiftCardId: null,
+            Method: null
+        };
+
+        const orderPreviewResponse = await orderApi.getOrderPreview(createOrderDto);
+        setOrderPreview(orderPreviewResponse);
+
+        setPaySelected(true);
+    };
+
+    const handleCardPayment = async () => {
+        const paymentRequestDto = {
+            TotalAmount: orderPreview.total
+        }
+        const paymentResponse = await paymentApi.makePayment(paymentRequestDto);
+        setPaymentData(paymentResponse);
+        setSelectedPaymentMethod('card');
+    };
+
+    const handleCashPayment = async () => {
+        const createOrderDto = {
+            Tip: tip ? Number(tip) : null,
+            OrderItems: order.products.map(item => ({
+                ProductVariationId: item.productVariationId,
+                Quantity: item.quantity
+            })),
+            PaymentIntentId: null,
+            GiftCardId: null,
+            Method: 2 // 0 -> "card", 1 -> "giftcard", 2 -> "cash"
+        };
+
+        const createdOrder = await orderApi.createOrder(createOrderDto);
+
+        onPaymentSuccess();
+    };
+
+    const onPaymentSuccess = () => {
+        setSelectedPaymentMethod(null);
+        setPaySelected(false);
+        setOrder({products: []});
+        toastNotify("Order successfully created!", "success");
+    };
 
     const paymentModal = (
         <Modal isOpen={paySelected} fade={true} size="lg" centered={true}>
@@ -303,7 +303,7 @@ const Home = () => {
                             type="radio"
                             value="card"
                             checked={selectedPaymentMethod === 'card'}
-                            onChange={(e) => setSelectedPaymentMethod('card')}
+                            onChange={() => handleCardPayment()}
                         />
                         <Label check>
                             Pay with card
@@ -355,6 +355,10 @@ const Home = () => {
             </ModalFooter>
         </Modal>
     );
+
+    if (isLoading) {
+        return <div>Loading...</div>;
+    }
 
     return (
         <Row style={{height: "85vh"}}>
