@@ -1,5 +1,4 @@
 ﻿import {useStripe, useElements, PaymentElement} from '@stripe/react-stripe-js';
-import React from 'react';
 import * as orderApi from "@/api/orderApi.jsx";
 import toastNotify from "@/helpers/toastNotify.js";
 
@@ -40,6 +39,7 @@ const CheckoutForm = ({paymentData, order, tip, onPaymentSuccess, isSplitPayment
                         ProductVariationId: item.productVariationId,
                         Quantity: item.quantity
                     })),
+                    OrderServiceIds: order.services.map(item => item.id),
                     PaymentIntentId: paymentData.paymentIntentId,
                     GiftCardId: null,
                     Method: 0 // 0 -> "card", 1 -> "giftcard", 2 -> "cash"

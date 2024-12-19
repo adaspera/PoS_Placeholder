@@ -1,4 +1,4 @@
-﻿import {
+import {
     Button,
     Col,
     Input,
@@ -8,7 +8,6 @@
     ModalFooter,
     ModalHeader,
     Row,
-    Form,
     FormGroup,
     FormFeedback
 } from "reactstrap";
@@ -21,22 +20,25 @@ import {getCurrency} from "@/helpers/currencyUtils.jsx";
 import Payment from "@/components/payment/payment.jsx";
 import Giftcard from "@/components/shared/Giftcard.jsx";
 import toastNotify from "@/helpers/toastNotify.js";
-import {createSplitPaymentOrder} from "@/api/orderApi.jsx";
+import * as serviceApi from "@/api/serviceApi.jsx";
 
 const Home = () => {
     const [isLoading, setIsLoading] = useState(true);
 
     const [tip, setTip] = useState('');
     const [orderPreview, setOrderPreview] = useState({});
-    const [order, setOrder] = useState({products: []});
+    const [order, setOrder] = useState({products: [], services: []});
     const [paymentData, setPaymentData] = useState({});
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
 
     const [totalPrice, setTotalPrice] = useState("0");
     const [products, setProducts] = useState(null);
+    const [services, setServices] = useState(null);
     const [variations, setVariations] = useState([]);
     const [productsInCart, setProductsInCart] = useState(null);
     const [productsInCatalogue, setProductsInCatalogue] = useState(null);
+    const [servicesInCart, setServicesInCart] = useState(null);
+    const [servicesInCatalogue, setServicesInCatalogue] = useState(null);
 
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [paySelected, setPaySelected] = useState(false);
@@ -51,23 +53,28 @@ const Home = () => {
 
 
     const fetchProducts = async () => {
-        try {
-            const fetchedProducts = await productApi.getProducts();
-            setProducts(fetchedProducts);
-        } catch (error) {
-            console.error("Error fetching products:", error);
-        } finally {
-            setIsLoading(false);
-        }
+        const fetchedProducts = await productApi.getProducts();
+        setProducts(fetchedProducts);
     };
+
+    const fetchServices = async () => {
+        const fetchedServices = await serviceApi.getAllServices();
+        setServices(fetchedServices);
+    }
 
     const fetchProductVariations = async (id) => {
         const fetchedProductVariations = await productApi.getProductVariations(id);
         setVariations(fetchedProductVariations);
     };
 
+    const fetchStartupData = async () => {
+        await fetchServices();
+        await fetchProducts();
+        setIsLoading(false);
+    }
+
     useEffect(() => {
-        fetchProducts();
+        fetchStartupData();
     }, []);
 
     useEffect(() => {
@@ -78,9 +85,17 @@ const Home = () => {
 
     useEffect(() => {
         formatProductsInCart();
-        const total = order.products.reduce((acc, item) => acc + item.price * item.quantity, 0);
+        formatServicesInCart();
+        let total = order.products.reduce((acc, item) => acc + item.price * item.quantity, 0);
+        total += order.services.reduce((acc, item) => acc + (item.isPercentage ? 0 : item.price), 0);
         setTotalPrice(total.toFixed(2));
     }, [order]);
+
+    useEffect(() => {
+        if (services && services.length > 0) {
+            formatServicesInCatalogue(services);
+        }
+    }, [services]);
 
     const formatProductsInCart = () => {
         const formatedProductsInCart = order.products.map((item, index) => (
@@ -188,6 +203,17 @@ const Home = () => {
         setOrder(prevOrder => ({...prevOrder, products: updatedProductsInCart}));
     };
 
+    const handleAddServiceToCart = async (service) => {
+        const newServiceInCart = {
+            id: service.id,
+            fullName: service.name,
+            price: service.serviceCharge,
+            isPercentage: service.isPercentage
+        };
+
+        setOrder(prevOrder => ({...prevOrder, services: [...prevOrder.services, newServiceInCart]}));
+    };
+
     const handleRemoveFromCart = (productVariationId) => {
         const existingIndex = order.products.findIndex(item => item.productVariationId === productVariationId);
         if (existingIndex === -1) {
@@ -209,6 +235,12 @@ const Home = () => {
         }
 
         setOrder((prevOrder) => ({...prevOrder, products: updatedProducts}));
+    };
+
+    const handleRemoveServiceFromCart = (serviceId) => {
+        const updatedServices = order.services.filter(item => item.id !== serviceId);
+
+        setOrder((prevOrder) => ({...prevOrder, services: updatedServices}));
     };
 
     const modal = (
@@ -234,7 +266,8 @@ const Home = () => {
     );
 
     const handlePayNowClick = async () => {
-        if (order.products.length === 0) {
+        const nonPercentageServices = order.services.filter(service => !service.isPercentage);
+        if (order.products.length === 0 && nonPercentageServices.length === 0) {
             toastNotify("Your cart is empty! Add some items...", "warning")
             return;
         }
@@ -245,6 +278,7 @@ const Home = () => {
                 ProductVariationId: item.productVariationId,
                 Quantity: item.quantity
             })),
+            OrderServiceIds: order.services.map(item => item.id),
             PaymentIntentId: null,
             GiftCardId: null,
             Method: null
@@ -279,6 +313,7 @@ const Home = () => {
                 ProductVariationId: item.productVariationId,
                 Quantity: item.quantity
             })),
+            OrderServiceIds: order.services.map(item => item.id) || [],
             PaymentIntentId: null,
             GiftCardId: null,
             Method: 2 // 0 -> "card", 1 -> "giftcard", 2 -> "cash"
@@ -292,8 +327,56 @@ const Home = () => {
     const onPaymentSuccess = () => {
         setSelectedPaymentMethod(null);
         setPaySelected(false);
-        setOrder({products: []});
+        setOrder({products: [], services: []});
         toastNotify("Order successfully created!", "success");
+    };
+
+    const formatServicesInCart = () => {
+        const formatedServicesInCart = order.services.map((item, index) => (
+            <Row key={index} className="p-2">
+                <Col>{item.fullName}</Col>
+                <Col className="d-flex justify-content-end">
+                    {item.price} {item.isPercentage ? "%" : getCurrency()}
+                    <i
+                        className="bi-x-circle px-2"
+                        style={{cursor: "pointer"}}
+                        onClick={() => handleRemoveServiceFromCart(item.id)}
+                    ></i>
+                </Col>
+            </Row>
+        ));
+
+        setServicesInCart(formatedServicesInCart);
+    };
+
+    const formatServicesInCatalogue = () => {
+        if (!services)
+            return <></>
+
+        const itemsPerRow = 6;
+
+        const rows = Array.from({ length: Math.ceil(services.length / itemsPerRow) }, (_, rowIndex) => {
+                const rowItems = services.slice(rowIndex * itemsPerRow, (rowIndex + 1) * itemsPerRow);
+
+                return (
+                    <Row key={rowIndex} className="pb-4">
+                        {rowItems.map((service) => (
+                            <Col key={service.id} md={12 / itemsPerRow} xs={6}>
+                                <div
+                                    className="border rounded p-2"
+                                    style={{ cursor: "pointer" }}
+                                    onClick={() => handleAddServiceToCart(service)}
+                                >
+                                    {service.name}
+                                </div>
+                            </Col>
+                        ))}
+                    </Row>
+                );
+            }
+        );
+
+        setServicesInCatalogue(rows);
     };
 
     const paymentModal = (
@@ -306,6 +389,10 @@ const Home = () => {
                     <div className="d-flex justify-content-between">
                         <span>Subtotal:</span>
                         <span>{orderPreview.subTotal} {getCurrency()}</span>
+                    </div>
+                    <div className="d-flex justify-content-between">
+                        <span>ServiceCharges:</span>
+                        <span>{orderPreview.serviceChargeTotal} {getCurrency()}</span>
                     </div>
                     <div className="d-flex justify-content-between">
                         <span>Taxes:</span>
@@ -356,7 +443,7 @@ const Home = () => {
                             type="radio"
                             value="giftcard"
                             checked={selectedPaymentMethod === 'giftcard'}
-                            onChange={(e) => setSelectedPaymentMethod('giftcard')}
+                            onChange={() => setSelectedPaymentMethod('giftcard')}
                         />
                         <Label check>
                             Pay with gift card
@@ -481,6 +568,7 @@ const Home = () => {
                     ProductVariationId: item.productVariationId,
                     Quantity: item.quantity
                 })),
+                OrderServiceIds: order.services.map(item => item.id),
                 Payments: partialPayments.map((p) => ({
                     PaymentIntentId: p.PaymentIntentId,
                     GiftCardId: p.GiftCardId,
@@ -502,7 +590,7 @@ const Home = () => {
             setPartialPaymentLocked(false);
             setSelectedPaymentMethod(null);
             setPaymentData(null);
-            setOrder({ products: [] });
+            setOrder({ products: [], services: [] });
             setSplitCheckSelected(false);
             setPaySelected(false);
         } catch (error) {
@@ -579,7 +667,7 @@ const Home = () => {
                             value="giftcard"
                             checked={selectedPaymentMethod === 'giftcard'}
                             disabled={!isValidAmount || partialPaymentLocked}
-                            onChange={(e) => {
+                            onChange={() => {
                                 setSelectedPaymentMethod('giftcard');
                                 setPartialPaymentLocked(true);
                             }}
@@ -629,6 +717,9 @@ const Home = () => {
                 <div>
                     {productsInCart}
                 </div>
+                <div>
+                    {servicesInCart}
+                </div>
                 <div className="d-flex justify-content-center m-2 mt-auto align-items-center">
                     <div className="d-flex justify-content-start col-xl-6 col-lg-4">
                         <Label className="w-25 d-flex flex-column justify-content-center p-0 m-0">Tip:</Label>
@@ -644,7 +735,10 @@ const Home = () => {
                 </div>
             </Col>
             <Col className="border rounded shadow-sm m-2 p-2">
+            <h5>Products</h5>
                 {productsInCatalogue}
+                <h5>Services</h5>
+                {servicesInCatalogue}
             </Col>
 
             {modal}

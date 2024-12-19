@@ -6,6 +6,7 @@ public class OrderPreviewDto
     public decimal SubTotal { get; set; }
     public decimal TaxesTotal { get; set; }
     public decimal DiscountsTotal { get; set; }
+    public decimal ServiceChargeTotal { get; set; }
     public decimal Total { get; set; }
     public List<TaxDto> Taxes { get; set; }
     

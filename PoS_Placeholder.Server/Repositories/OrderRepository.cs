@@ -16,6 +16,7 @@ public class OrderRepository : Repository<Order>
             .Include(o => o.Products)
             .Include(o => o.Taxes)
             .Include(o => o.Discounts)
+            .Include(o => o.Services)
             .Where(o => o.BusinessId == businessId)
             .ToListAsync();
     }
@@ -26,6 +27,7 @@ public class OrderRepository : Repository<Order>
             .Include(o => o.Products)
             .Include(o => o.Taxes)
             .Include(o => o.Discounts)
+            .Include(o => o.Services)
             .FirstOrDefaultAsync(o => o.Id == orderId && o.BusinessId == businessId);
     }
 
@@ -34,6 +36,7 @@ public class OrderRepository : Repository<Order>
         return await _db.Orders
             .Include(o => o.Payments)
             .Include(o => o.Products)
+            .Include(o => o.Services)
             .FirstOrDefaultAsync(o => o.Id == userId && o.BusinessId == businessId);
     }
 }
