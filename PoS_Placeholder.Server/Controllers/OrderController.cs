@@ -210,7 +210,7 @@ public class OrderController : ControllerBase
                 return BadRequest($"Product variation with Id {orderItem.ProductVariationId} not found.");
 
             var discount = productVariation.Discount;
-            if (discount != null)
+            if (discount != null && discount.EndDate >= DateTime.Now)
             {
                 discountsTotal += discount.IsPercentage
                     ? productVariation.Price * orderItem.Quantity * discount.Amount / 100
@@ -356,7 +356,7 @@ public class OrderController : ControllerBase
                     _db.ProductsArchive.Add(productArchive);
 
                     var discount = productVariation.Discount;
-                    if (discount != null)
+                    if (discount != null && discount.EndDate >= DateTime.Now)
                     {
                         discountsTotal += discount.IsPercentage
                             ? productVariation.Price * orderItem.Quantity * discount.Amount / 100m
@@ -608,7 +608,7 @@ public class OrderController : ControllerBase
                     _db.ProductsArchive.Add(productArchive);
 
                     var discount = productVariation.Discount;
-                    if (discount != null)
+                    if (discount != null && discount.EndDate >= DateTime.Now)
                     {
                         discountsTotal += discount.IsPercentage
                             ? productVariation.Price * orderItem.Quantity * discount.Amount / 100m

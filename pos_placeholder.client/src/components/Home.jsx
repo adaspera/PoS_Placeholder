@@ -391,7 +391,7 @@ const Home = () => {
                         <span>{orderPreview.subTotal} {getCurrency()}</span>
                     </div>
                     <div className="d-flex justify-content-between">
-                        <span>ServiceCharges:</span>
+                        <span>Service Charges:</span>
                         <span>{orderPreview.serviceChargeTotal} {getCurrency()}</span>
                     </div>
                     <div className="d-flex justify-content-between">
