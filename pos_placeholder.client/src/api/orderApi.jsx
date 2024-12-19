@@ -8,6 +8,15 @@ export const createOrder = async (products) => {
     }
 };
 
+export const createSplitPaymentOrder = async (splitOrderDto) => {
+    try {
+        return await apiService.post("/api/orders/createSplitOrder", splitOrderDto);
+    } catch (e) {
+        console.log(e);
+        throw e;
+    }
+};
+
 export const getOrderPreview = async (products) => {
     try {
         return await apiService.post("/api/orders/preview", products);

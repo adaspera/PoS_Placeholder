@@ -1,8 +1,9 @@
 ﻿import React, {useState} from "react";
 import {Button, Input, Label, Form, FormGroup, FormFeedback} from "reactstrap";
 import * as orderApi from "@/api/orderApi.jsx";
+import * as giftcardApi from "@/api/giftcardApi.jsx";
 
-const Giftcard = ({onPaymentSuccess, order, tip}) => {
+const Giftcard = ({onPaymentSuccess, order, tip, isSplitPayment, partialAmount, onPartialPaymentSuccess}) => {
     const [giftcardId, setGiftcardId] = useState("");
     const [errorMessage, setErrorMessage] = useState("");
     const [isValid, setIsValid] = useState(true);
@@ -28,26 +29,43 @@ const Giftcard = ({onPaymentSuccess, order, tip}) => {
             return;
         }
 
-        try {
-            const createOrderDto = {
-                Tip: tip ? Number(tip) : null,
-                OrderItems: order.products.map((item) => ({
-                    ProductVariationId: item.productVariationId,
-                    Quantity: item.quantity,
-                })),
-                PaymentIntentId: null,
-                GiftCardId: giftcardId,
-                Method: 1,
-            };
-            
-            await orderApi.createOrder(createOrderDto);
+        if (isSplitPayment) {
+            try {
+                await giftcardApi.canGiftcardPay(giftcardId, partialAmount);
+                
+                onPartialPaymentSuccess({
+                    PaymentIntentId: null,
+                    GiftCardId: giftcardId,
+                    Method: 1, // 0 -> "card", 1 -> "giftcard", 2 -> "cash"
+                    PaidPrice: partialAmount
+                });
+            } catch (error) {
+                const backendError = error.message || "Failed to verify giftcard balance."
+                setErrorMessage(backendError);
+                setIsValid(false);
+            }
+        } else {
+            try {
+                const createOrderDto = {
+                    Tip: tip ? Number(tip) : null,
+                    OrderItems: order.products.map((item) => ({
+                        ProductVariationId: item.productVariationId,
+                        Quantity: item.quantity,
+                    })),
+                    PaymentIntentId: null,
+                    GiftCardId: giftcardId,
+                    Method: 1,
+                };
 
-            // If successful createOrder
-            onPaymentSuccess();
-        } catch (error) {
-            const backendError = error.message || "An unknown error occurred.";
-            setErrorMessage(backendError);
-            setIsValid(false);
+                await orderApi.createOrder(createOrderDto);
+
+                // If successful createOrder
+                onPaymentSuccess();
+            } catch (error) {
+                const backendError = error.message || "An unknown error occurred.";
+                setErrorMessage(backendError);
+                setIsValid(false);
+            }
         }
     };
 
