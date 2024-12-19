@@ -13,12 +13,20 @@ const EmployeeForm = ({ onSubmit, credentials, formId = '0' }) => {
         }));
     };
 
+    const handleAvailabilityChange = (e) => {
+        setNewCredentials((prevState) => ({
+            ...prevState,
+            availabilityStatus: Number(e.target.value),
+        }));
+    };
+
     return (
         <Form onSubmit={(e) => {
             e.preventDefault();
             onSubmit(newCredentials);
         }}>
             {Object.entries(newCredentials)
+                .filter(([key]) => key !== "availabilityStatus")
                 .map(([key, value]) => (
                     <FormGroup key={formId + key}>
                         <Label for={formId + key}>
@@ -37,6 +45,25 @@ const EmployeeForm = ({ onSubmit, credentials, formId = '0' }) => {
                         />
                     </FormGroup>
                 ))}
+
+            {newCredentials.availabilityStatus !== undefined && (
+                <FormGroup>
+                    <Label for={formId + "availabilityStatus"}>Availability Status</Label>
+                    <Input
+                        type="select"
+                        id={formId + "availabilityStatus"}
+                        value={newCredentials.availabilityStatus}
+                        onChange={handleAvailabilityChange}
+                    >
+                        <option value="0">Available</option>
+                        <option value="1">Vacation</option>
+                        <option value="2">Sick</option>
+                        <option value="3">Left</option>
+                        <option value="4">Family Emergency</option>
+                    </Input>
+                </FormGroup>
+            )}
+
             <Row className="d-flex justify-content-center align-items-center">
                 <Button color="success" className="me-3 w-25" type="submit">
                     Submit
@@ -47,6 +74,6 @@ const EmployeeForm = ({ onSubmit, credentials, formId = '0' }) => {
             </Row>
         </Form>
     );
-}
+};
 
 export default EmployeeForm;

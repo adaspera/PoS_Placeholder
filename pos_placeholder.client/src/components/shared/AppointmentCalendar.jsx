@@ -4,6 +4,7 @@ import "@/css/WorkTimeCalendar.css";
 import "react-datepicker/dist/react-datepicker.css";
 import {Col, Row, Button, Form, FormGroup, Label, Input} from "reactstrap";
 import { useState } from "react";
+import toastNotify from "@/helpers/toastNotify.js";
 
 const AppointmentCalendar = ({ workTimes, service, appointments, onSelect, onDelete }) => {
     const [selectedWorkDay, setSelectedWorkDay] = useState(null);
@@ -85,7 +86,7 @@ const AppointmentCalendar = ({ workTimes, service, appointments, onSelect, onDel
 
     const handleTimeSelection = (timeSlot) => {
         if (customerPhone === "" || customerName === "") {
-            alert("Please enter a customer phone and name");
+            toastNotify("Please enter a customer phone and name", "warning")
         } else {
             onSelect({
                 timeReserved: `${formatDateLocal(selectedWorkDay)}T${timeSlot}`,

@@ -14,6 +14,7 @@ import {useEffect, useState} from "react";
 import * as businessApi from "@/api/businessApi.jsx";
 import EmployeeForm from "@/components/shared/EmployeeForm.jsx";
 import WorkTimeCalendar from "@/components/shared/WorkTimeCalendar.jsx";
+import toastNotify from "@/helpers/toastNotify.js";
 
 const Business = () => {
     const [isLoading, setIsLoading] = useState(true);
@@ -63,15 +64,16 @@ const Business = () => {
                 setEmployees([...employees, response.data]);
             }
             else {
-                alert("Registration failed.");
+                toastNotify("Registration failed.", "error");
             }
         } catch (err) {
-            alert("Register failed. Please check your credentials.");
+            toastNotify("Register failed. Please check your credentials.", "error");
             console.log(err);
         }
     }
 
     const handleUpdateEmployee = async (credentials) => {
+        console.log(credentials);
         const updatedEnmployee = await businessApi.updateEmployee(credentials);
         setEmployees(
             employees.map((e) => (e.id === updatedEnmployee.id ? updatedEnmployee : e))
@@ -84,7 +86,7 @@ const Business = () => {
             lastName: employee.lastName,
             phoneNumber: employee.phoneNumber,
             email: employee.email,
-            status: employee.status
+            availabilityStatus: employee.availabilityStatus
         }
     }
 
@@ -126,7 +128,7 @@ const Business = () => {
     const addWorkTime = async () => {
         if (selectedWorkTime.endTime === "" || selectedWorkTime.startTime === ""
             || selectedWorkTime.breakStart === "" || selectedWorkTime.breakEnd === "") {
-            alert("Please select all times");
+            toastNotify("Please select all times", "warning");
         } else {
             const existingWorkTimeIndex = workTimes.findIndex(
                 (wt) => new Date(wt.day).toDateString() === new Date(selectedWorkTime.day).toDateString()
