@@ -1,4 +1,4 @@
-﻿import {Button, Col, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader, Row, Form, FormGroup} from "reactstrap";
+﻿import {Button, Col, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader, Row, FormGroup} from "reactstrap";
 import {useEffect, useState} from "react";
 import * as productApi from "@/api/productApi.jsx";
 import * as orderApi from "@/api/orderApi.jsx";
@@ -8,18 +8,20 @@ import {getCurrency} from "@/helpers/currencyUtils.jsx";
 import Payment from "@/components/payment/payment.jsx";
 import Giftcard from "@/components/shared/Giftcard.jsx";
 import toastNotify from "@/helpers/toastNotify.js";
+import * as serviceApi from "@/api/serviceApi.jsx";
 
 const Home = () => {
     const [isLoading, setIsLoading] = useState(true);
 
     const [tip, setTip] = useState('');
     const [orderPreview, setOrderPreview] = useState({});
-    const [order, setOrder] = useState({products: []});
+    const [order, setOrder] = useState({products: [], services: []});
     const [paymentData, setPaymentData] = useState({});
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
 
     const [totalPrice, setTotalPrice] = useState("0");
     const [products, setProducts] = useState(null);
+    const [services, setServices] = useState(null);
     const [variations, setVariations] = useState([]);
     const [productsInCart, setProductsInCart] = useState(null);
     const [productsInCatalogue, setProductsInCatalogue] = useState(null);
@@ -28,23 +30,28 @@ const Home = () => {
     const [paySelected, setPaySelected] = useState(false);
 
     const fetchProducts = async () => {
-        try {
-            const fetchedProducts = await productApi.getProducts();
-            setProducts(fetchedProducts);
-        } catch (error) {
-            console.error("Error fetching products:", error);
-        } finally {
-            setIsLoading(false);
-        }
+        const fetchedProducts = await productApi.getProducts();
+        setProducts(fetchedProducts);
     };
+
+    const fetchServices = async () => {
+        const fetchedServices = await serviceApi.getAllServices();
+        setServices(fetchedServices);
+    }
 
     const fetchProductVariations = async (id) => {
         const fetchedProductVariations = await productApi.getProductVariations(id);
         setVariations(fetchedProductVariations);
     };
 
+    const fetchStartupData = async () => {
+        await fetchServices();
+        await fetchProducts();
+        setIsLoading(false);
+    }
+
     useEffect(() => {
-        fetchProducts();
+        fetchStartupData();
     }, []);
 
     useEffect(() => {
@@ -95,6 +102,16 @@ const Home = () => {
         }
 
         setOrder(prevOrder => ({...prevOrder, products: updatedProductsInCart}));
+    };
+
+    const handleAddServiceToCart = async (service) => {
+        const newServiceInCart = {
+            fullName: service.name,
+            price: service.serviceCharge,
+            quantity: 1,
+        };
+
+        setOrder(prevOrder => ({...prevOrder, services: newServiceInCart}));
     };
 
     const handleRemoveFromCart = (productVariationId) => {
@@ -213,6 +230,25 @@ const Home = () => {
         setProductsInCart(formatedProductsInCart);
     };
 
+    const formatServicesInCart = () => {
+        const formatedServicesInCart = order.services.map((item, index) => (
+            <Row key={index} className="p-2">
+                <Col>{item.fullName}</Col>
+                <Col className="d-flex justify-content-center">x{item.quantity}</Col>
+                <Col className="d-flex justify-content-end">
+                    {item.price} {getCurrency()}
+                    <i
+                        className="bi-x-circle px-2"
+                        style={{cursor: "pointer"}}
+                        onClick={() => handleRemoveServiceFromCart(item.productVariationId)}
+                    ></i>
+                </Col>
+            </Row>
+        ));
+
+        return formatedServicesInCart;
+    };
+
     const formatProductsInCatalogue = (products) => {
         const itemsPerRow = 6;
         const groupedProducts = products.reduce((acc, product) => {
@@ -245,6 +281,37 @@ const Home = () => {
 
         setProductsInCatalogue(catalogue);
     }
+
+    const formatServicesInCatalogue = () => {
+        if (!services)
+            return <></>
+
+        const itemsPerRow = 6;
+
+        const rows = Array.from({ length: Math.ceil(services.length / itemsPerRow) }, (_, rowIndex) => {
+                const rowItems = services.slice(rowIndex * itemsPerRow, (rowIndex + 1) * itemsPerRow);
+
+                return (
+                    <Row key={rowIndex} className="pb-4">
+                        {rowItems.map((service) => (
+                            <Col key={service.id} md={12 / itemsPerRow} xs={6}>
+                                <div
+                                    className="border rounded p-2"
+                                    style={{ cursor: "pointer" }}
+                                    onClick={() => handleAddServiceToCart(service)}
+                                >
+                                    {service.name}
+                                </div>
+                            </Col>
+                        ))}
+                    </Row>
+                );
+            }
+        );
+
+        return rows;
+    };
+
 
     const modal =
         <Modal isOpen={!!selectedProduct} fade={false} size="lg" centered={true}>
@@ -308,7 +375,7 @@ const Home = () => {
                             type="radio"
                             value="card"
                             checked={selectedPaymentMethod === 'card'}
-                            onChange={(e) => setSelectedPaymentMethod('card')}
+                            onChange={() => setSelectedPaymentMethod('card')}
                         />
                         <Label check>
                             Pay with card
@@ -331,7 +398,7 @@ const Home = () => {
                             type="radio"
                             value="giftcard"
                             checked={selectedPaymentMethod === 'giftcard'}
-                            onChange={(e) => setSelectedPaymentMethod('giftcard')}
+                            onChange={() => setSelectedPaymentMethod('giftcard')}
                         />
                         <Label check>
                             Pay with gift card
@@ -386,7 +453,10 @@ const Home = () => {
                 </div>
             </Col>
             <Col className="border rounded shadow-sm m-2 p-2">
+                <h5>Products</h5>
                 {productsInCatalogue}
+                <h5>Services</h5>
+                {formatServicesInCatalogue}
             </Col>
 
             {modal}
