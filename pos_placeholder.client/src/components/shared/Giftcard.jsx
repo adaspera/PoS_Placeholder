@@ -1,5 +1,5 @@
-﻿import React, {useState} from "react";
-import {Button, Input, Label, Form, FormGroup, FormFeedback} from "reactstrap";
+﻿import {useState} from "react";
+import {Button, Input, Label, FormGroup, FormFeedback} from "reactstrap";
 import * as orderApi from "@/api/orderApi.jsx";
 import * as giftcardApi from "@/api/giftcardApi.jsx";
 
@@ -52,6 +52,7 @@ const Giftcard = ({onPaymentSuccess, order, tip, isSplitPayment, partialAmount, 
                         ProductVariationId: item.productVariationId,
                         Quantity: item.quantity,
                     })),
+                    OrderServiceIds: order.services.map(item => item.id),
                     PaymentIntentId: null,
                     GiftCardId: giftcardId,
                     Method: 1,

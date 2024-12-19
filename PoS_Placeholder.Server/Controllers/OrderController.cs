@@ -102,10 +102,11 @@ public class OrderController : ControllerBase
                     Price = pa.Price,
                     Quantity = pa.Quantity
                 }).ToList(),
-                Services = order.Services?.Select(ps => new OrderServiceDto
+                Services = order.Services?.Select(sa => new OrderServiceDto
                 {
-                    FullName = ps.Name,
-                    Price = ps.Price
+                    FullName = sa.Name,
+                    Price = sa.Price,
+                    isPercentage = sa.IsPercentage
                 }).ToList()
             };
         }).ToList();
@@ -167,10 +168,11 @@ public class OrderController : ControllerBase
                 Price = pa.Price,
                 Quantity = pa.Quantity
             }).ToList(),
-            Services = order.Services?.Select(ps => new OrderServiceDto
+            Services = order.Services?.Select(sa => new OrderServiceDto
             {
-                FullName = ps.Name,
-                Price = ps.Price
+                FullName = sa.Name,
+                Price = sa.Price,
+                isPercentage = sa.IsPercentage
             }).ToList()
         };
 
@@ -524,6 +526,12 @@ public class OrderController : ControllerBase
                         FullName = pa.FullName,
                         Price = pa.Price,
                         Quantity = pa.Quantity
+                    }).ToList(),
+                    Services = serviceArchives.Select(sa => new OrderServiceDto
+                    {
+                        FullName = sa.Name,
+                        Price = sa.Price,
+                        isPercentage = sa.IsPercentage
                     }).ToList()
                 };
 
@@ -616,6 +624,27 @@ public class OrderController : ControllerBase
 
                         _db.DiscountsArchives.Add(discountArchive);
                     }
+
+                    foreach (int serviceId in createSplitOrderDto.OrderServiceIds)
+                    {
+                        var service = await _serviceRepository.GetByIdAsync(serviceId);
+
+                        if (service == null)
+                        {
+                            await transaction.RollbackAsync();
+                            return BadRequest("Bad service Id. Service not found.");
+                        }
+
+                        var serviceArchive = new ServiceArchive
+                        {
+                            IsPercentage = service.IsPercentage,
+                            Name = service.Name,
+                            OrderId = order.Id,
+                            Price = service.ServiceCharge
+                        };
+
+                        _db.ServicesArchive.Add(serviceArchive);
+                    }
                 }
 
                 // productArchive and discountArchive entries saved to db, so we can get use them instantly
@@ -623,6 +652,16 @@ public class OrderController : ControllerBase
 
                 var productArchives = await _db.ProductsArchive.Where(pa => pa.OrderId == order.Id).ToListAsync();
                 var subtotal = productArchives.Sum(pa => pa.Price * pa.Quantity);
+                
+                var serviceArchives = await _db.ServicesArchive.Where(sa => sa.OrderId == order.Id).ToListAsync();
+
+                decimal serviceChargeTotal = 0m;
+                foreach (var serviceArchive in serviceArchives)
+                {
+                    serviceChargeTotal += serviceArchive.IsPercentage ? subtotal * serviceArchive.Price / 100 : 0m;
+                }
+                
+                subtotal += serviceArchives.Sum(sa => sa.IsPercentage ? 0 : sa.Price);
 
                 var taxesTotal = 0m;
                 foreach (var tax in taxes)
@@ -644,10 +683,11 @@ public class OrderController : ControllerBase
                 // tax entries saved to db, so we can use them instantly
                 await _db.SaveChangesAsync();
 
+                serviceChargeTotal = Math.Round(serviceChargeTotal, 2);
                 discountsTotal = Math.Round(discountsTotal, 2);
                 taxesTotal = Math.Round(taxesTotal, 2);
                 subtotal = Math.Round(subtotal, 2);
-                var grandTotal = subtotal + taxesTotal + tip - discountsTotal;
+                var grandTotal = subtotal + taxesTotal + serviceChargeTotal + tip - discountsTotal;
 
                 // Check if Partial Payments are not empty
                 if (createSplitOrderDto.Payments.IsNullOrEmpty())
@@ -746,6 +786,7 @@ public class OrderController : ControllerBase
                     Status = order.Status.ToString(),
                     TotalPrice = grandTotal,
                     SubTotal = subtotal,
+                    ServiceChargesTotal = serviceChargeTotal,
                     TaxesTotal = taxesTotal,
                     DiscountsTotal = discountsTotal,
                     Products = productArchives.Select(pa => new OrderProductDto
@@ -753,6 +794,12 @@ public class OrderController : ControllerBase
                         FullName = pa.FullName,
                         Price = pa.Price,
                         Quantity = pa.Quantity
+                    }).ToList(),
+                    Services = serviceArchives.Select(sa => new OrderServiceDto
+                    {
+                        FullName = sa.Name,
+                        Price = sa.Price,
+                        isPercentage = sa.IsPercentage
                     }).ToList()
                 };
 

@@ -1,4 +1,4 @@
-import {Button, Col, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader, Row, Form, FormGroup} from "reactstrap";
+import {Button, Col, Row} from "reactstrap";
 import * as orderApi from "@/api/orderApi.jsx";
 import * as paymentApi from "@/api/paymentApi.jsx";
 import {useEffect, useState} from "react";
@@ -90,6 +90,10 @@ const Orders = () => {
                                 <div className="col-auto text-start">{getCurrency()}{selectedOrder.taxesTotal}</div>
                             </div>
                             <div className="row">
+                                <div className="col-sm-2 col-4 text-start">Service charges:</div>
+                                <div className="col-auto text-start">{getCurrency()}{selectedOrder.serviceChargesTotal}</div>
+                            </div>
+                            <div className="row">
                                 <div className="col-sm-2 col-4 text-start">Tip:</div>
                                 <div className="col-auto text-start">{getCurrency()}{selectedOrder.tip}</div>
                             </div>
@@ -105,12 +109,19 @@ const Orders = () => {
                             </div>
                         </div>
                         <div className="justify-content-center border shadow-sm rounded p-2">
-                            <h4 className="d-flex justify-content-center mb-3">Products</h4>
+                            <h4 className="d-flex justify-content-center mb-3">Products and services</h4>
                             {selectedOrder.products.map((p, index) => (
                                 <Row key={index} className="align-items-center border rounded p-2 m-0">
                                     <Col className="d-flex justify-content-center">{p.fullName}</Col>
                                     <Col className="d-flex justify-content-center">{getCurrency()}{p.price}</Col>
                                     <Col className="d-flex justify-content-center">x{p.quantity}</Col>
+                                </Row>
+                            ))}
+                            {selectedOrder.services.map((s, index) => ( s.isPercentage === false &&
+                                <Row key={index} className="align-items-center border rounded p-2 m-0">
+                                    <Col className="d-flex justify-content-center">{s.fullName}</Col>
+                                    <Col className="d-flex justify-content-center">{getCurrency()}{s.price}</Col>
+                                    <Col className="d-flex justify-content-center"></Col>
                                 </Row>
                             ))}
                         </div>
