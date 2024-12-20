@@ -9,7 +9,6 @@ using PoS_Placeholder.Server.Models.Dto;
 using PoS_Placeholder.Server.Models.Enum;
 using PoS_Placeholder.Server.Repositories;
 using PoS_Placeholder.Server.Services;
-using Stripe;
 using PaymentMethod = PoS_Placeholder.Server.Models.Enum.PaymentMethod;
 
 
@@ -64,13 +63,13 @@ public class OrderController : ControllerBase
             discountsTotal = Math.Round(discountsTotal, 2);
 
             var subTotal = order.Products.Sum(p => p.Price * p.Quantity);
+            
+            if (order.Services != null) 
+                subTotal += order.Services.Sum(s => s.IsPercentage ? 0m : s.Price);
 
             var serviceChargeTotal = 0m;
             if (order.Services != null) 
                 serviceChargeTotal += order.Services.Sum(s => s.IsPercentage ? subTotal * s.Price / 100m : 0m);
-
-            if (order.Services != null) 
-                subTotal += order.Services.Sum(s => s.IsPercentage ? 0m : s.Price);
             
             subTotal = Math.Round(subTotal, 2);
             serviceChargeTotal = Math.Round((decimal)serviceChargeTotal, 2);
@@ -270,8 +269,10 @@ public class OrderController : ControllerBase
         
         taxesTotal = Math.Round(taxesTotal, 2);
         discountsTotal = Math.Round(discountsTotal, 2);
+        
         var tip = createOrderDto.Tip ?? 0.00m;
         tip = Math.Round(tip, 2);
+        
         decimal total = subTotal + taxesTotal + totalServiceCharge + tip - discountsTotal;
         
         _logger.LogInformation("In preview order:");
@@ -403,14 +404,14 @@ public class OrderController : ControllerBase
                 var subtotal = productArchives.Sum(pa => pa.Price * pa.Quantity);
                 
                 var serviceArchives = await _db.ServicesArchive.Where(sa => sa.OrderId == order.Id).ToListAsync();
-
+                subtotal += serviceArchives.Sum(sa => sa.IsPercentage ? 0 : sa.Price);
+                
+                // For the percentage from full order price charge
                 decimal serviceChargeTotal = 0m;
                 foreach (var serviceArchive in serviceArchives)
                 {
                     serviceChargeTotal += serviceArchive.IsPercentage ? subtotal * serviceArchive.Price / 100 : 0m;
                 }
-                
-                subtotal += serviceArchives.Sum(sa => sa.IsPercentage ? 0 : sa.Price);
                 
                 var taxesTotal = 0m;
 
@@ -654,14 +655,13 @@ public class OrderController : ControllerBase
                 var subtotal = productArchives.Sum(pa => pa.Price * pa.Quantity);
                 
                 var serviceArchives = await _db.ServicesArchive.Where(sa => sa.OrderId == order.Id).ToListAsync();
-
+                subtotal += serviceArchives.Sum(sa => sa.IsPercentage ? 0 : sa.Price);
+                
                 decimal serviceChargeTotal = 0m;
                 foreach (var serviceArchive in serviceArchives)
                 {
                     serviceChargeTotal += serviceArchive.IsPercentage ? subtotal * serviceArchive.Price / 100 : 0m;
                 }
-                
-                subtotal += serviceArchives.Sum(sa => sa.IsPercentage ? 0 : sa.Price);
 
                 var taxesTotal = 0m;
                 foreach (var tax in taxes)
