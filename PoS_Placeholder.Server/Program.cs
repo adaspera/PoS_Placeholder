@@ -48,10 +48,14 @@ builder.Services.AddScoped<UserWorkTimeRepository>();
 builder.Services.AddScoped<GiftcardRepository>();
 builder.Services.AddScoped<UserRepository>();
 
+builder.Logging.ClearProviders(); 
 builder.Logging.AddLogger(configuration =>
 {
     builder.Configuration.GetSection("FileLogger").Bind(configuration);
 });
+
+builder.Logging.AddFilter("Microsoft", LogLevel.Warning);
+builder.Logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Warning);
 
 builder.Services.AddControllers()
 .AddJsonOptions(options =>
