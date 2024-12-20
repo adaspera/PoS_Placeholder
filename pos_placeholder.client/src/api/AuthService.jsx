@@ -13,9 +13,11 @@ export async function login(email, password) {
 
         const authToken = response.data.authToken;
         const currency = response.data.currency;
+        const role = response.data.role;
 
         localStorage.setItem("authToken", authToken);
         localStorage.setItem("currency", currency);
+        localStorage.setItem("role", role);
 
         return response;
     } catch (error) {
