@@ -70,7 +70,6 @@ const Services = () => {
 
     const handleUpdateService = async (service) => {
         service = {...service, id: open}
-        console.log(service);
         const updatedService = await serviceApi.updateService(service);
         setServices(
             services.map((s) => (s.id === updatedService.id ? updatedService : s))
