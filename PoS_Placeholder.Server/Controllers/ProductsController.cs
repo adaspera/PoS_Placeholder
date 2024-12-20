@@ -33,8 +33,7 @@ public class ProductsController : ControllerBase
 
         var userBusinessId = user.BusinessId;
         var businessProducts = await _productRepository.GetWhereAsync(product => product.BusinessId == userBusinessId);
-
-
+        
         return Ok(businessProducts);
     }
 

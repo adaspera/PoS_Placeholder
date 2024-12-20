@@ -30,9 +30,7 @@ public class GiftcardController : ControllerBase
         if (user == null)
             return Unauthorized("User not found.");
 
-        var businessGiftcards = _giftcardRepository.GetWhere(g => g.BusinessId == user.BusinessId);
-        if (businessGiftcards.IsNullOrEmpty())
-            return NotFound("No business giftcards found.");
+        var businessGiftcards = await _giftcardRepository.GetWhereAsync(g => g.BusinessId == user.BusinessId);
 
         return Ok(businessGiftcards);
     }
