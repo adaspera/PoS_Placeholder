@@ -80,10 +80,6 @@ public class OrderController : ControllerBase
             var totalPrice = subTotal + taxesTotal + serviceChargeTotal + (order.Tip ?? 0m) - discountsTotal;
             totalPrice = Math.Round(totalPrice, 2);
 
-            _logger.LogInformation("In Get All Orders: ");
-            _logger.LogInformation(
-                $"Tip: {order.Tip}, SubTotal: {subTotal}, TaxesTotal: {taxesTotal}, DiscountsTotal: {discountsTotal} Total: {totalPrice}");
-
             return new OrderResponseDto
             {
                 Id = order.Id,
@@ -274,10 +270,6 @@ public class OrderController : ControllerBase
         tip = Math.Round(tip, 2);
         
         decimal total = subTotal + taxesTotal + totalServiceCharge + tip - discountsTotal;
-        
-        _logger.LogInformation("In preview order:");
-        _logger.LogInformation(
-            $"Tip: {tip}, Subtotal: {subTotal}, TaxesTotal: {taxesTotal}, Discount: {discountsTotal}");
 
         var orderPreviewDto = new OrderPreviewDto
         {
@@ -508,10 +500,6 @@ public class OrderController : ControllerBase
                 // transaction commited -> everything commited to db after this point
                 await transaction.CommitAsync();
 
-                _logger.LogInformation("In create order:");
-                _logger.LogInformation(
-                    $"Tip: {tip}, Subtotal: {subtotal}, TaxesTotal: {taxesTotal}, Discount: {discountsTotal}, grandTotal: {grandTotal}");
-
                 var orderResponseDto = new OrderResponseDto
                 {
                     Id = order.Id,
@@ -625,27 +613,27 @@ public class OrderController : ControllerBase
 
                         _db.DiscountsArchives.Add(discountArchive);
                     }
+                }
+                
+                foreach (int serviceId in createSplitOrderDto.OrderServiceIds)
+                {
+                    var service = await _serviceRepository.GetByIdAsync(serviceId);
 
-                    foreach (int serviceId in createSplitOrderDto.OrderServiceIds)
+                    if (service == null)
                     {
-                        var service = await _serviceRepository.GetByIdAsync(serviceId);
-
-                        if (service == null)
-                        {
-                            await transaction.RollbackAsync();
-                            return BadRequest("Bad service Id. Service not found.");
-                        }
-
-                        var serviceArchive = new ServiceArchive
-                        {
-                            IsPercentage = service.IsPercentage,
-                            Name = service.Name,
-                            OrderId = order.Id,
-                            Price = service.ServiceCharge
-                        };
-
-                        _db.ServicesArchive.Add(serviceArchive);
+                        await transaction.RollbackAsync();
+                        return BadRequest("Bad service Id. Service not found.");
                     }
+
+                    var serviceArchive = new ServiceArchive
+                    {
+                        IsPercentage = service.IsPercentage,
+                        Name = service.Name,
+                        OrderId = order.Id,
+                        Price = service.ServiceCharge
+                    };
+
+                    _db.ServicesArchive.Add(serviceArchive);
                 }
 
                 // productArchive and discountArchive entries saved to db, so we can get use them instantly
@@ -688,7 +676,7 @@ public class OrderController : ControllerBase
                 taxesTotal = Math.Round(taxesTotal, 2);
                 subtotal = Math.Round(subtotal, 2);
                 var grandTotal = subtotal + taxesTotal + serviceChargeTotal + tip - discountsTotal;
-
+                
                 // Check if Partial Payments are not empty
                 if (createSplitOrderDto.Payments.IsNullOrEmpty())
                 {
@@ -773,10 +761,6 @@ public class OrderController : ControllerBase
 
                 // transaction commited -> everything commited to db after this point
                 await transaction.CommitAsync();
-
-                _logger.LogInformation("In create order:");
-                _logger.LogInformation(
-                    $"Tip: {tip}, Subtotal: {subtotal}, TaxesTotal: {taxesTotal}, Discount: {discountsTotal}, grandTotal: {grandTotal}");
 
                 var orderResponseDto = new OrderResponseDto
                 {
