@@ -64,12 +64,12 @@ public class OrderController : ControllerBase
 
             var subTotal = order.Products.Sum(p => p.Price * p.Quantity);
             
-            if (order.Services != null) 
-                subTotal += order.Services.Sum(s => s.IsPercentage ? 0m : s.Price);
-
             var serviceChargeTotal = 0m;
             if (order.Services != null) 
                 serviceChargeTotal += order.Services.Sum(s => s.IsPercentage ? subTotal * s.Price / 100m : 0m);
+            
+            if (order.Services != null) 
+                subTotal += order.Services.Sum(s => s.IsPercentage ? 0m : s.Price);
             
             subTotal = Math.Round(subTotal, 2);
             serviceChargeTotal = Math.Round((decimal)serviceChargeTotal, 2);
