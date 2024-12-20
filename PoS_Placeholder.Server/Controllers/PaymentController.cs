@@ -36,7 +36,7 @@ public class PaymentController : ControllerBase
     public async Task<IActionResult> MakePayment([FromBody] PaymentRequestDto paymentRequestDto)
     {
         _logger.LogInformation("Received MakePayment request from user {UserId} with amount={Amount}",
-            User?.Identity?.Name, paymentRequestDto.TotalAmount);
+            User?.Claims.FirstOrDefault()?.Value, paymentRequestDto.TotalAmount);
 
         StripeConfiguration.ApiKey = _configuration["StripeSettings:SecretKey"];
 
@@ -45,7 +45,7 @@ public class PaymentController : ControllerBase
             if (paymentRequestDto.TotalAmount <= 0)
             {
                 _logger.LogWarning("MakePayment: Invalid amount {Amount} from user {UserId}",
-                    paymentRequestDto.TotalAmount, User?.Identity?.Name);
+                    paymentRequestDto.TotalAmount, User?.Claims.FirstOrDefault()?.Value);
                 return BadRequest("Invalid payment amount");
             }
 
@@ -64,7 +64,7 @@ public class PaymentController : ControllerBase
 
             _logger.LogInformation(
                 "MakePayment: Created payment intent {PaymentIntentId} for user {UserId}, amount={Amount}",
-                paymentIntentResponse.Id, User?.Identity?.Name, paymentRequestDto.TotalAmount);
+                paymentIntentResponse.Id, User?.Claims.FirstOrDefault()?.Value, paymentRequestDto.TotalAmount);
 
             var paymentResponseDto = new PaymentResponseDto
             {
@@ -76,7 +76,7 @@ public class PaymentController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in MakePayment for user {UserId}: {Message}", User?.Identity?.Name, ex.Message);
+            _logger.LogError(ex, "Error in MakePayment for user {UserId}: {Message}", User?.Claims.FirstOrDefault()?.Value, ex.Message);
             return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while processing payment.");
         }
     }
@@ -86,12 +86,12 @@ public class PaymentController : ControllerBase
     public async Task<IActionResult> RefundOrder([FromRoute] int orderId)
     {
         _logger.LogInformation("Received RefundOrder request from user {UserId} for OrderId={OrderId}",
-            User?.Identity?.Name, orderId);
+            User?.Claims.FirstOrDefault()?.Value, orderId);
 
         var user = await _userManager.GetUserAsync(User);
         if (user == null)
         {
-            _logger.LogWarning("RefundOrder: User not found or unauthorized. UserId={UserId}", User?.Identity?.Name);
+            _logger.LogWarning("RefundOrder: User not found or unauthorized. UserId={UserId}", User?.Claims.FirstOrDefault()?.Value);
             return Unauthorized("User not found.");
         }
 

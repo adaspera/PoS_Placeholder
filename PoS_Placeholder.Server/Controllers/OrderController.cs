@@ -45,12 +45,12 @@ public class OrderController : ControllerBase
     [Authorize]
     public async Task<IActionResult> GetAllOrders()
     {
-        _logger.LogInformation("Received GetAllOrders request from user {UserId}", User?.Identity?.Name);
+        _logger.LogInformation("Received GetAllOrders request from user {UserId}", User?.Claims.FirstOrDefault()?.Value);
 
         var user = await _userManager.GetUserAsync(User);
         if (user == null)
         {
-            _logger.LogWarning("GetAllOrders: User not found or unauthorized. UserId={UserId}", User?.Identity?.Name);
+            _logger.LogWarning("GetAllOrders: User not found or unauthorized. UserId={UserId}", User?.Claims.FirstOrDefault()?.Value);
             return Unauthorized("User not found.");
         }
 
@@ -129,12 +129,12 @@ public class OrderController : ControllerBase
     public async Task<IActionResult> GetOrderById(int id)
     {
         _logger.LogInformation("Received GetOrderById request for OrderId={OrderId} from user {UserId}", id,
-            User?.Identity?.Name);
+            User?.Claims.FirstOrDefault()?.Value);
 
         var user = await _userManager.GetUserAsync(User);
         if (user == null)
         {
-            _logger.LogWarning("GetOrderById: User not found or unauthorized. UserId={UserId}", User?.Identity?.Name);
+            _logger.LogWarning("GetOrderById: User not found or unauthorized. UserId={UserId}", User?.Claims.FirstOrDefault()?.Value);
             return Unauthorized("User not found.");
         }
 
@@ -210,12 +210,12 @@ public class OrderController : ControllerBase
     public async Task<IActionResult> GetOrderPaymentPreview([FromBody] CreateOrderDto createOrderDto)
     {
         _logger.LogInformation("Received GetOrderPaymentPreview request from user {UserId} with {ItemCount} items",
-            User?.Identity?.Name, createOrderDto.OrderItems.Count);
+            User?.Claims.FirstOrDefault()?.Value, createOrderDto.OrderItems.Count);
 
         if (!ModelState.IsValid)
         {
             _logger.LogWarning("GetOrderPaymentPreview: Invalid model for user {UserId}. Errors: {Errors}",
-                User?.Identity?.Name,
+                User?.Claims.FirstOrDefault()?.Value,
                 string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)));
             return BadRequest(ModelState);
         }
@@ -224,7 +224,7 @@ public class OrderController : ControllerBase
         if (user == null)
         {
             _logger.LogWarning("GetOrderPaymentPreview: User not found or unauthorized. UserId={UserId}",
-                User?.Identity?.Name);
+                User?.Claims.FirstOrDefault()?.Value);
             return Unauthorized("User not found.");
         }
 
@@ -349,12 +349,12 @@ public class OrderController : ControllerBase
     public async Task<IActionResult> CreateOrder([FromBody] CreateOrderDto createOrderDto)
     {
         _logger.LogInformation("Received CreateOrder request from user {UserId} with {ItemCount} items.",
-            User?.Identity?.Name, createOrderDto.OrderItems.Count);
+            User?.Claims.FirstOrDefault()?.Value, createOrderDto.OrderItems.Count);
 
         if (!ModelState.IsValid)
         {
             _logger.LogWarning("CreateOrder request from user {UserId} is invalid. ModelState: {ModelStateErrors}",
-                User?.Identity?.Name,
+                User?.Claims.FirstOrDefault()?.Value,
                 string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)));
             return BadRequest(ModelState);
         }
@@ -362,7 +362,7 @@ public class OrderController : ControllerBase
         var user = await _userManager.GetUserAsync(User);
         if (user == null)
         {
-            _logger.LogWarning("CreateOrder: User not found or unauthorized for user {UserId}.", User?.Identity?.Name);
+            _logger.LogWarning("CreateOrder: User not found or unauthorized for user {UserId}.", User?.Claims.FirstOrDefault()?.Value);
             return Unauthorized("User not found.");
         }
 
@@ -649,12 +649,12 @@ public class OrderController : ControllerBase
     {
         _logger.LogInformation(
             "Received CreateSplitOrder request from user {UserId} with {ItemCount} items and {PaymentCount} partial payments.",
-            User?.Identity?.Name, createSplitOrderDto.OrderItems.Count, createSplitOrderDto.Payments?.Count ?? 0);
+            User?.Claims.FirstOrDefault()?.Value, createSplitOrderDto.OrderItems.Count, createSplitOrderDto.Payments?.Count ?? 0);
 
         if (!ModelState.IsValid)
         {
             _logger.LogWarning("CreateSplitOrder request from user {UserId} is invalid. ModelState: {ModelStateErrors}",
-                User?.Identity?.Name,
+                User?.Claims.FirstOrDefault()?.Value,
                 string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)));
             return BadRequest(ModelState);
         }

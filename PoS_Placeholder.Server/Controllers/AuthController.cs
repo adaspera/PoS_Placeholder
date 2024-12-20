@@ -42,7 +42,7 @@ public class AuthController : ControllerBase
     {
         _logger.LogInformation(
             "Received RegisterEmployee request from user {UserId}, registering employee with email {EmployeeEmail}",
-            User?.Identity?.Name, registerEmployeeDto.Email);
+            User?.Claims.FirstOrDefault()?.Value, registerEmployeeDto.Email);
 
         if (!ModelState.IsValid)
         {
@@ -56,7 +56,7 @@ public class AuthController : ControllerBase
         if (ownerUser == null)
         {
             _logger.LogWarning("RegisterEmployee: Owner user not found or unauthorized. UserId={UserId}",
-                User?.Identity?.Name);
+                User?.Claims.FirstOrDefault()?.Value);
             _apiResponse = new ApiResponse
             {
                 StatusCode = HttpStatusCode.Unauthorized,
