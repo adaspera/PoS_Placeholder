@@ -258,7 +258,7 @@ public class ServiceController : ControllerBase
                 return Forbid(_403statusMessage);
             }
 
-            _logger.LogInformation("Updating ServiceId={ServiceId} for user {UserId}", id, user.Id);
+            _logger.LogInformation("Updating ServiceId={ServiceId} for user {UserId}", id, updateServiceDto.UserId);
             if (updateServiceDto.Name != null)
                 service.Name = updateServiceDto.Name;
             if (updateServiceDto.ServiceCharge != null)
@@ -267,6 +267,8 @@ public class ServiceController : ControllerBase
                 service.IsPercentage = (bool)updateServiceDto.IsPercentage;
             if (updateServiceDto.Duration != null)
                 service.Duration = (uint)updateServiceDto.Duration;
+            if(updateServiceDto.UserId != null)
+                service.UserId = updateServiceDto.UserId;
 
             _serviceRepository.Update(service);
             await _serviceRepository.SaveChangesAsync();
