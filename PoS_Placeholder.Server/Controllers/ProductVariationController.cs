@@ -82,7 +82,7 @@ public class ProductVariationController : ControllerBase
         var userBusinessId = user.BusinessId;
         var productVariations = await _variationRepository.GetByProductAndBusinessId(id, userBusinessId);
 
-        if (productVariations == null || !productVariations.Any())
+        if (productVariations == null)
         {
             _logger.LogWarning(
                 "GetAllProductVariationsById: No product variations found for productId {ProductId} and user {UserId}",
