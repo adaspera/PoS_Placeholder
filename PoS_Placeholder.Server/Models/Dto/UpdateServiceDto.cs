@@ -20,4 +20,6 @@ public class UpdateServiceDto
 
     [DisplayName("Duration of the service in minutes")]
     public uint? Duration { get; set; }
+    
+    public string? UserId { get; set; }
 }
